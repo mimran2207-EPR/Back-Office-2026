@@ -100,3 +100,92 @@ const eprData = {
   ],
 };
 window.eprData = eprData;
+
+/* ─────────────────────────── eprApi ─────────────────────────── *
+ * Async facade over the mock data — mirrors the shape we'd want
+ * when swapping in a real backend (Supabase, REST, GraphQL…).
+ * All methods return Promises; `update*` calls write to localStorage
+ * overrides so user actions persist across reloads without a server.
+ *
+ * Swap targets when the time comes:
+ *   - replace `sleep(...)` with `fetch(...)`
+ *   - replace `eprData.*` reads with API endpoints
+ *   - replace localStorage write with API mutation
+ * The component API stays identical.
+ * ──────────────────────────────────────────────────────────────── */
+(function buildEprApi(){
+  const ART_DELAY = 80; // tiny delay to mimic network latency
+  const sleep = (ms = ART_DELAY) => new Promise(r => setTimeout(r, ms));
+  const OVERRIDE_KEY = 'epr-req-overrides';
+  function loadOverrides() {
+    try { return JSON.parse(localStorage.getItem(OVERRIDE_KEY) || '{}'); }
+    catch(_) { return {}; }
+  }
+  function saveOverrides(map) {
+    try { localStorage.setItem(OVERRIDE_KEY, JSON.stringify(map)); }
+    catch(_) {}
+  }
+  function applyOverride(row) {
+    const o = loadOverrides()[row.id];
+    if (!o) return row;
+    return { ...row, ...o };
+  }
+  window.eprApi = {
+    requests: {
+      async list(filter = {}) {
+        await sleep();
+        let all = window.eprData.requests.map(applyOverride);
+        if (filter.dept && filter.dept !== 'הכול') all = all.filter(r => r.dept === filter.dept);
+        if (filter.priority)                       all = all.filter(r => r.priority === filter.priority);
+        if (filter.status)                         all = all.filter(r => r.status === filter.status);
+        if (filter.q) {
+          const q = String(filter.q).toLowerCase();
+          all = all.filter(r => (r.title+' '+r.id+' '+r.resident).toLowerCase().includes(q));
+        }
+        return all;
+      },
+      async get(id) {
+        await sleep();
+        const row = window.eprData.requests.find(r => r.id === id);
+        return row ? applyOverride(row) : null;
+      },
+      async update(id, patch) {
+        await sleep();
+        const overrides = loadOverrides();
+        overrides[id] = { ...(overrides[id]||{}), ...patch, updatedAt: new Date().toISOString() };
+        saveOverrides(overrides);
+        return this.get(id);
+      },
+    },
+    residents: {
+      async list({ q } = {}) {
+        await sleep();
+        const all = window.eprData.residents;
+        return q ? all.filter(r => (r.name+' '+r.id+' '+r.phone).includes(q)) : all;
+      },
+    },
+    teams:  { async list() { await sleep(); return window.eprData.teams; } },
+    users:  { async list({ active } = {}) {
+      await sleep();
+      const all = window.eprData.users;
+      if (active === undefined) return all;
+      return all.filter(u => !!u.active === !!active);
+    } },
+    settings: {
+      async get() {
+        await sleep();
+        try { return JSON.parse(localStorage.getItem('epr-settings-v1') || '{}'); }
+        catch(_) { return {}; }
+      },
+      async save(section, value) {
+        await sleep();
+        try {
+          const all = JSON.parse(localStorage.getItem('epr-settings-v1') || '{}');
+          all[section] = value;
+          localStorage.setItem('epr-settings-v1', JSON.stringify(all));
+          return true;
+        } catch(_) { return false; }
+      },
+    },
+  };
+})();
