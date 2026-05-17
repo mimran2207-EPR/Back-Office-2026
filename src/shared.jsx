@@ -1,5 +1,5 @@
 // epr/v2-shared.jsx — shared shell components
-const { useState: vS, useEffect: vE, useMemo: vM } = React;
+const { useState: vS, useEffect: vE, useMemo: vM, useRef: vR } = React;
 
 function Sparkline({ data, tone='teal', h=36, w=120 }) {
   const min=Math.min(...data), max=Math.max(...data), r=max-min||1, step=w/(data.length-1);
@@ -99,6 +99,23 @@ function Sidebar({ page, setPage }) {
   const [collapsed, setCollapsed] = vS(()=> {
     try { return localStorage.getItem('epr-sb-collapsed') === '1'; } catch(_) { return false; }
   });
+  const [mobileOpen, setMobileOpen] = vS(false);
+  vE(()=>{
+    const onOpen = ()=> setMobileOpen(true);
+    window.addEventListener('epr-mobile-nav-open', onOpen);
+    return ()=> window.removeEventListener('epr-mobile-nav-open', onOpen);
+  }, []);
+  vE(()=>{
+    if (!mobileOpen) return;
+    const onKey = (e)=> { if (e.key==='Escape') setMobileOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.documentElement.classList.add('ep-mobile-nav-open');
+    return ()=> {
+      document.removeEventListener('keydown', onKey);
+      document.documentElement.classList.remove('ep-mobile-nav-open');
+    };
+  }, [mobileOpen]);
+  const handlePageClick = (id) => { setPage(id); setMobileOpen(false); };
   vE(()=>{
     try { localStorage.setItem('epr-sb-collapsed', collapsed?'1':'0'); } catch(_) {}
     document.documentElement.classList.toggle('ep-sb-collapsed', collapsed);
@@ -111,8 +128,11 @@ function Sidebar({ page, setPage }) {
     return initial;
   });
   const isActive = (id) => page===id || (id==='requests' && page==='request-detail');
-  return (
-    <aside className={`ep-sb ${collapsed?'collapsed':''}`}>
+  return (<>
+    {mobileOpen && <div className="ep-sb-scrim" onClick={()=>setMobileOpen(false)} aria-hidden="true"/>}
+    <aside className={`ep-sb ${collapsed?'collapsed':''} ${mobileOpen?'mobile-open':''}`}
+      aria-label={t('ניווט')}
+      role="navigation">
       <div className="ep-brand">
         <div className="ep-logo" style={{overflow:'hidden'}}>
           {brand.logoDataUrl
@@ -157,7 +177,7 @@ function Sidebar({ page, setPage }) {
                 </a>
               ) : (
                 <a href="#" className={isActive(g.id)?'active':''} title={collapsed?lbl:undefined}
-                   onClick={e=>{e.preventDefault();setPage(g.id)}}>
+                   onClick={e=>{e.preventDefault();handlePageClick(g.id)}}>
                   <span className="ep-nav-ic">{I[g.icon]?React.createElement(I[g.icon]):null}</span>
                   <span className="ep-nav-lbl">{lbl}</span>
                   {g.badge!=null && <span className="ep-nav-badge">{g.badge.toLocaleString('he-IL')}</span>}
@@ -166,7 +186,7 @@ function Sidebar({ page, setPage }) {
               {hasChildren && isOpen && !collapsed && (
                 <div className="ep-nav-children">
                   {g.children.map(c=>(
-                    <a key={c.id} href="#" className={`child ${page===c.id?'active':''}`} onClick={e=>{e.preventDefault();setPage(c.id)}}>
+                    <a key={c.id} href="#" className={`child ${page===c.id?'active':''}`} onClick={e=>{e.preventDefault();handlePageClick(c.id)}}>
                       {c.icon && I[c.icon] && <span className="ep-nav-ic">{React.createElement(I[c.icon])}</span>}
                       {c.icon && !I[c.icon] && <span className="ep-nav-bullet"/>}
                       {!c.icon && <span className="ep-nav-bullet"/>}
@@ -200,6 +220,54 @@ function Sidebar({ page, setPage }) {
         </div>
       </div>
     </aside>
+  </>);
+}
+
+function LangSwitcher() {
+  const lang = useEprLang();
+  const [open, setOpen] = vS(false);
+  const ref = vR(null);
+  const t = window.eprT || ((s)=>s);
+  const langs = window.EPR_LANGS || ['he','en','ar'];
+  const labels = window.EPR_LANG_LABELS || {he:'עברית',en:'English',ar:'العربية'};
+  const flags  = window.EPR_LANG_FLAGS  || {he:'IL',en:'EN',ar:'AR'};
+  vE(()=>{
+    if (!open) return;
+    const onDoc = (e)=> { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey = (e)=> { if (e.key==='Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return ()=> { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+  const choose = (L)=> { window.eprSetLang && window.eprSetLang(L); setOpen(false); };
+  return (
+    <div ref={ref} style={{position:'relative'}}>
+      <button className="ep-icon-btn"
+        title={t('שפה')}
+        aria-label={t('שפה')}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={()=>setOpen(o=>!o)}
+        data-toast="off"
+        style={{minWidth:36,padding:'0 8px',fontWeight:700,fontSize:12,letterSpacing:'.04em'}}>
+        {String(lang||'he').toUpperCase()}
+      </button>
+      {open && (
+        <ul role="listbox" aria-label={t('שפה')}
+          style={{position:'absolute',top:'calc(100% + 6px)',insetInlineEnd:0,zIndex:60,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:10,boxShadow:'0 10px 28px rgba(0,0,0,.14)',padding:6,minWidth:180,listStyle:'none',margin:0}}>
+          {langs.map(L=>(
+            <li key={L} role="option" aria-selected={lang===L}>
+              <button type="button" data-toast="off" onClick={()=>choose(L)}
+                style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'8px 10px',border:'none',background:lang===L?'rgba(15,150,140,.1)':'transparent',borderRadius:7,cursor:'pointer',fontSize:13.5,textAlign:'inherit',color:'var(--text)'}}>
+                <span aria-hidden="true" style={{fontSize:16}}>{flags[L]}</span>
+                <span style={{flex:1}}>{labels[L]}</span>
+                {lang===L && <window.EprIcon.check width={12} height={12} style={{color:'var(--accent)'}}/>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -209,6 +277,13 @@ function TopBar({ crumbs, onSearch, goPage }) {
   const t = window.eprT || ((s)=>s);
   return (
     <header className="ep-top">
+      <button className="ep-icon-btn ep-mobile-menu" data-toast="off"
+        title={t('פתח סרגל')} aria-label={t('פתח סרגל')}
+        onClick={()=>window.dispatchEvent(new Event('epr-mobile-nav-open'))}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
       <div className="ep-crumbs">
         <a href="#dashboard" className="ep-crumb-link" onClick={e=>{e.preventDefault();goPage&&goPage('dashboard')}}>{t('בק אופיס')}</a>
         {crumbs.map((c,i)=>{
@@ -221,7 +296,7 @@ function TopBar({ crumbs, onSearch, goPage }) {
           const label = t(c);
           return (
             <React.Fragment key={i}>
-              <I.chevL width={12} height={12}/>
+              <I.chevL width={12} height={12} aria-hidden="true"/>
               {isLast
                 ? <b>{label}</b>
                 : <a href="#" className="ep-crumb-link" onClick={e=>{e.preventDefault();target&&goPage&&goPage(target)}}>{label}</a>}
@@ -231,21 +306,23 @@ function TopBar({ crumbs, onSearch, goPage }) {
       </div>
       <button className="ep-search" style={{marginInlineStart:20}} data-toast="off"
         onClick={()=>window.dispatchEvent(new Event('open-ai-search'))}
-        title="⌘K">
-        <I.search width={16} height={16}/>
+        title="⌘K"
+        aria-label={t('חפש תושב, פנייה או רחוב · או שאל את ה-AI…')}>
+        <I.search width={16} height={16} aria-hidden="true"/>
         <span>{t('חפש תושב, פנייה או רחוב · או שאל את ה-AI…')}</span>
-        <span className="ep-ai-pill">
+        <span className="ep-ai-pill" aria-hidden="true">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3zm7 11l.9 2.7 2.7.9-2.7.9-.9 2.7-.9-2.7-2.7-.9 2.7-.9.9-2.7z"/>
           </svg>
           AI
         </span>
-        <kbd className="ep-kbd">⌘K</kbd>
+        <kbd className="ep-kbd" aria-hidden="true">⌘K</kbd>
       </button>
       <div className="ep-top-right">
-        <button className="ep-icon-btn" title={t('ממתינים לאישור')}><I.shield/><span className="ep-dot" style={{background:'var(--amber)'}}/></button>
-        <button className="ep-icon-btn" title={t('יומן')}><I.calendar/></button>
-        <button className="ep-icon-btn" title={t('התראות')}><I.bell/><span className="ep-dot"/></button>
+        <LangSwitcher/>
+        <button className="ep-icon-btn" title={t('ממתינים לאישור')} aria-label={t('ממתינים לאישור')}><I.shield aria-hidden="true"/><span className="ep-dot" style={{background:'var(--amber)'}}/></button>
+        <button className="ep-icon-btn" title={t('יומן')} aria-label={t('יומן')}><I.calendar aria-hidden="true"/></button>
+        <button className="ep-icon-btn" title={t('התראות')} aria-label={t('התראות')}><I.bell aria-hidden="true"/><span className="ep-dot"/></button>
       </div>
     </header>
   );
