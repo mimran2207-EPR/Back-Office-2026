@@ -63,9 +63,25 @@ function useEprBranding() {
   return b;
 }
 
+// ── Theme (light / dark) ────────────────────────────────────────
+function readEprTheme() {
+  try { return localStorage.getItem('epr-theme') || 'light'; } catch(_) { return 'light'; }
+}
+function applyEprTheme(theme) {
+  document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+}
+function useEprTheme() {
+  const [theme, setTheme] = vS(readEprTheme);
+  vE(()=> { applyEprTheme(theme); try { localStorage.setItem('epr-theme', theme); } catch(_){} }, [theme]);
+  return [theme, setTheme];
+}
+// Apply on initial load (before React mounts)
+try { applyEprTheme(readEprTheme()); } catch(_) {}
+
 function Sidebar({ page, setPage }) {
   const I = window.EprIcon;
   const brand = useEprBranding();
+  const [theme, setTheme] = useEprTheme();
   const [collapsed, setCollapsed] = vS(()=> {
     try { return localStorage.getItem('epr-sb-collapsed') === '1'; } catch(_) { return false; }
   });
@@ -155,6 +171,16 @@ function Sidebar({ page, setPage }) {
             <div className="ep-sb-user-name">מיכל עמרן</div>
             <div className="ep-sb-user-role">מנהלת בק אופיס</div>
           </div>
+          <button
+            className="ep-icon-btn ep-theme-toggle"
+            title={theme==='dark'?'מצב בהיר':'מצב כהה'}
+            aria-label={theme==='dark'?'החלף למצב בהיר':'החלף למצב כהה'}
+            onClick={()=>setTheme(theme==='dark'?'light':'dark')}
+            data-toast="off">
+            {theme==='dark'
+              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>}
+          </button>
           <button className="ep-icon-btn" title="התנתקות" style={{width:30,height:30}}><I.logout width={16} height={16}/></button>
         </div>
       </div>
@@ -236,4 +262,4 @@ function EmptyState({ icon='search', title, hint, action }) {
   );
 }
 
-Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader, useEprBranding, EmptyState });
+Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader, useEprBranding, useEprTheme, EmptyState });

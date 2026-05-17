@@ -497,3 +497,82 @@ button:focus-visible, a:focus-visible {
 
 /* Hide scroll on body when modal is open is handled by JS; ensure modal scrolls */
 .ep-modal-body { max-height: 75vh; overflow-y: auto; }
+
+/* ─────────────────────────────────────────────────────────
+ * Dark mode — opt-in via [data-theme="dark"] on <html>.
+ * Re-points the surface/text tokens; component CSS keeps
+ * referencing the same variables and adapts automatically.
+ * ───────────────────────────────────────────────────────── */
+html[data-theme="dark"] {
+  --bg:#0F1620;
+  --surface:#19232F;
+  --surface-2:#202D3D;
+  --border:#2A3849;
+  --border-strong:#3B4D62;
+  --border-dark:#3B4D62;
+  --text:#E6ECF3;
+  --muted:#94A6BB;
+  --heading:#F2F6FA;
+  --cream:#1B2735;
+  --slate-50:#1B2735;
+  --slate-100:#202D3D;
+  --slate-200:#2A3849;
+  --slate-300:#3B4D62;
+  --slate-700:#C7D2DE;
+  --slate-800:#E6ECF3;
+  --slate-900:#F2F6FA;
+}
+html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+html[data-theme="dark"] .ep-card,
+html[data-theme="dark"] .ep-kpi,
+html[data-theme="dark"] .ep-budget-col,
+html[data-theme="dark"] .ep-bmini,
+html[data-theme="dark"] .ep-budget-foot,
+html[data-theme="dark"] .ep-settings-nav,
+html[data-theme="dark"] .ep-sb,
+html[data-theme="dark"] .ep-top { background: var(--surface); }
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .ep-feature,
+html[data-theme="dark"] .ep-modal,
+html[data-theme="dark"] .ep-drawer { background: var(--surface); color: var(--text); }
+html[data-theme="dark"] .ep-modal-overlay { background: rgba(5,10,18,.6); }
+html[data-theme="dark"] .ep-scrim { background: rgba(5,10,18,.5); }
+html[data-theme="dark"] .ep-toast { background: var(--surface); color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] .ep-tag { background: var(--surface-2); color: var(--text); }
+html[data-theme="dark"] .ep-tag.slate { background: var(--surface-2); color: var(--muted); }
+html[data-theme="dark"] .ep-th { background: var(--surface-2); color: var(--muted); }
+html[data-theme="dark"] .ep-table tr:hover td { background: var(--surface-2); }
+html[data-theme="dark"] .ep-row:hover { background: var(--surface-2); }
+html[data-theme="dark"] .wg,
+html[data-theme="dark"] .wg-tab { background: var(--surface); border-color: var(--border); }
+html[data-theme="dark"] .wg-tab.active { background: var(--surface-2); color: var(--accent); }
+html[data-theme="dark"] .wg-bars-grid span { background: rgba(255,255,255,.06); }
+html[data-theme="dark"] svg .ep-spark + path { stroke-opacity: .9; }
+html[data-theme="dark"] .ep-btn-ghost { background: transparent; }
+html[data-theme="dark"] .ep-pill { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] .ep-pill.on { background: var(--accent); color: #fff; }
+html[data-theme="dark"] .ep-attach-drop { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
+html[data-theme="dark"] .ep-feed-ic { background: var(--surface-2); color: var(--accent); }
+html[data-theme="dark"] .ep-login-form { background: var(--bg); }
+html[data-theme="dark"] .ep-login-hero { filter: brightness(.85); }
+html[data-theme="dark"] .ep-callout { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] .ep-callout svg { color: var(--accent); }
+html[data-theme="dark"] .ep-mono.ep-muted { background: var(--surface-2) !important; }
+
+/* Theme toggle button in the sidebar bottom */
+.ep-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  color: var(--muted);
+  transition: background .15s, color .15s;
+}
+.ep-theme-toggle:hover { background: var(--surface-2); color: var(--text); }
