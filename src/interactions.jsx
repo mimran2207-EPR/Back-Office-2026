@@ -27,6 +27,66 @@ function ToastHost() {
   );
 }
 
+/* ─────────────────────────── Confirm dialog ─────────────────────────── *
+ * Async, styled replacement for window.confirm. Exposed as
+ * `window.eprConfirm({title, message, danger, confirmText, cancelText})`
+ * Returns a Promise<boolean>.
+ * ────────────────────────────────────────────────────────────────────── */
+function ConfirmHost() {
+  const [open, setOpen] = tsS(false);
+  const [opts, setOpts] = tsS({});
+  const resolverRef = tsR(null);
+  const I = window.EprIcon;
+  tsE(()=>{
+    window.eprConfirm = (o={}) => new Promise(resolve => {
+      resolverRef.current = resolve;
+      setOpts({
+        title: o.title || 'אישור פעולה',
+        message: o.message || 'האם להמשיך?',
+        danger: !!o.danger,
+        confirmText: o.confirmText || (o.danger ? 'אישור' : 'המשך'),
+        cancelText: o.cancelText || 'ביטול',
+      });
+      setOpen(true);
+    });
+    return ()=> { delete window.eprConfirm; };
+  },[]);
+  const done = (val) => {
+    setOpen(false);
+    const fn = resolverRef.current; resolverRef.current = null;
+    if (fn) fn(val);
+  };
+  tsE(()=>{
+    if (!open) return;
+    const onKey = (e)=> { if (e.key==='Escape') done(false); else if (e.key==='Enter') done(true); };
+    document.addEventListener('keydown', onKey);
+    return ()=> document.removeEventListener('keydown', onKey);
+  }, [open]);
+  if (!open) return null;
+  return (
+    <div className="ep-modal-overlay" onMouseDown={()=>done(false)} role="dialog" aria-modal="true" aria-labelledby="ep-confirm-title">
+      <div className="ep-modal" style={{maxWidth:440}} onMouseDown={e=>e.stopPropagation()}>
+        <header className="ep-modal-head">
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div className="ep-feed-ic" style={{background:opts.danger?'rgba(226,75,75,.15)':'rgba(15,150,140,.12)',color:opts.danger?'#B23838':'var(--accent)'}}>
+              {opts.danger ? <I.alert width={18} height={18}/> : <I.check width={18} height={18}/>}
+            </div>
+            <h3 id="ep-confirm-title" style={{margin:0}}>{opts.title}</h3>
+          </div>
+          <button className="ep-icon-btn" onClick={()=>done(false)} data-toast="off" aria-label="סגור"><I.close/></button>
+        </header>
+        <div className="ep-modal-body" style={{paddingBlock:8}}>
+          <p style={{margin:0,fontSize:14,lineHeight:1.55,color:'var(--text)'}}>{opts.message}</p>
+        </div>
+        <footer className="ep-modal-foot">
+          <button className="ep-btn ep-btn-ghost" onClick={()=>done(false)} data-toast="off" autoFocus>{opts.cancelText}</button>
+          <button className={`ep-btn ${opts.danger?'ep-btn-danger':'ep-btn-primary'}`} onClick={()=>done(true)} data-toast="off">{opts.confirmText}</button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────── Universal button feedback handler ─────────────── *
  * Captures clicks on buttons / nav-links that don't already navigate
  * or have a local onClick that shows feedback. Reads the button text
@@ -747,6 +807,7 @@ function EntityCreateModal() {
 function EprInteractions() {
   return (<>
     <ToastHost/>
+    <ConfirmHost/>
     <ButtonFeedback/>
     <NewRequestModal/>
     <FormBuilderModal/>

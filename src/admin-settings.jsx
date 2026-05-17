@@ -204,7 +204,12 @@ function OrganizationSettings() {
             <div style={{flex:1}}><b>{dep.name}</b><div className="ep-muted" style={{fontSize:11,marginTop:2}}>{dep.open} פניות פתוחות · SLA {dep.sla}%</div></div>
             <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`רשימת הצוותים של "${dep.name}"`, 'info')} data-toast="off">צוותים</button>
             <button className="ep-icon-btn" style={{width:30,height:30}} title="ערוך" aria-label={`ערוך ${dep.name}`} onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))} data-toast="off"><I.note width={13} height={13}/></button>
-            <button className="ep-icon-btn" style={{width:30,height:30}} title="מחק" aria-label={`מחק ${dep.name}`} onClick={()=>{ if(window.confirm(`למחוק את המחלקה "${dep.name}"?`)) window.eprToast && window.eprToast(`המחלקה "${dep.name}" נמחקה`, 'danger'); }} data-toast="off"><I.close width={13} height={13}/></button>
+            <button className="ep-icon-btn" style={{width:30,height:30}} title="מחק" aria-label={`מחק ${dep.name}`} onClick={async()=>{
+              const ok = window.eprConfirm
+                ? await window.eprConfirm({ title:'מחיקת מחלקה', message:`המחלקה "${dep.name}" תוסר מהמערכת. פעולה זו תשפיע על השיוך של ${dep.open} פניות פתוחות. להמשיך?`, danger:true, confirmText:'מחק מחלקה' })
+                : window.confirm(`למחוק את המחלקה "${dep.name}"?`);
+              if (ok) window.eprToast && window.eprToast(`המחלקה "${dep.name}" נמחקה`, 'danger');
+            }} data-toast="off"><I.close width={13} height={13}/></button>
           </div>
         ))}
       </div>
@@ -605,8 +610,11 @@ function UsersPage() {
     persistHidden({...hidden, [u.email]:'approved'});
     window.eprToast && window.eprToast(`${u.name} אושר/ה — נשלחה הזמנה ל-${u.email}`, 'success');
   };
-  const reject = (u) => {
-    if (!window.confirm(`לדחות את הבקשה של ${u.name}?`)) return;
+  const reject = async (u) => {
+    const ok = window.eprConfirm
+      ? await window.eprConfirm({ title:'דחיית בקשת הצטרפות', message:`בקשת ההצטרפות של ${u.name} (${u.email}) תידחה. ניתן לשלוח דחייה חדשה בכל עת.`, danger:true, confirmText:'דחה בקשה' })
+      : window.confirm(`לדחות את הבקשה של ${u.name}?`);
+    if (!ok) return;
     persistHidden({...hidden, [u.email]:'rejected'});
     window.eprToast && window.eprToast(`הבקשה של ${u.name} נדחתה`, 'danger');
   };
