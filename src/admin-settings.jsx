@@ -62,13 +62,15 @@ try { eprApplyBranding(eprLoadStore().branding); } catch(_) {}
 
 // Generic settings layout
 function SettingsLayout({ tab, setTab, items, children }) {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   return (
     <div style={{display:'grid',gridTemplateColumns:'240px 1fr',gap:20,alignItems:'flex-start'}}>
       <aside className="ep-card" style={{padding:8,position:'sticky',top:84,maxHeight:'calc(100vh - 110px)',overflowY:'auto'}}>
-        <div style={{padding:'8px 12px 6px',fontSize:10,fontWeight:700,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em'}}>הגדרות מערכת</div>
+        <div style={{padding:'8px 12px 6px',fontSize:10,fontWeight:700,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em'}}>{t('הגדרות מערכת')}</div>
         <ul style={{listStyle:'none',margin:0,padding:0}}>
           {items.map(it => (
-            <li key={it.id}><button onClick={()=>setTab(it.id)} className="ep-nav-link" style={{background:tab===it.id?'rgba(15,150,140,.1)':'transparent',color:tab===it.id?'var(--accent)':'var(--text)',fontWeight:tab===it.id?600:500,width:'100%',textAlign:'inherit',padding:'9px 12px',borderRadius:7,marginBottom:1}}>{it.label}</button></li>
+            <li key={it.id}><button onClick={()=>setTab(it.id)} className="ep-nav-link" style={{background:tab===it.id?'rgba(15,150,140,.1)':'transparent',color:tab===it.id?'var(--accent)':'var(--text)',fontWeight:tab===it.id?600:500,width:'100%',textAlign:'inherit',padding:'9px 12px',borderRadius:7,marginBottom:1}}>{t(it.label)}</button></li>
           ))}
         </ul>
       </aside>
@@ -96,10 +98,12 @@ const SET_ITEMS = [
 
 function AdminSettingsPage({ initialTab='general' }) {
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [tab,setTab] = asS(initialTab);
   asE(() => { setTab(initialTab); }, [initialTab]);
   return (<>
-    <PageHeader title="הגדרות מערכת" icon="gear" subtitle="קונפיגורציה כוללת של EPR — מבנה ארגוני, SLA, ערוצים, התראות והרשאות"/>
+    <PageHeader title={t('הגדרות מערכת')} icon="gear" subtitle={t('קונפיגורציה כוללת של EPR — מבנה ארגוני, SLA, ערוצים, התראות והרשאות')}/>
     <SettingsLayout tab={tab} setTab={setTab} items={SET_ITEMS}>
       {tab==='general' && <GeneralSettings/>}
       {tab==='business-calendar' && <BusinessCalendarSettings/>}
@@ -130,43 +134,45 @@ function FieldError({ children }) {
 
 // 1. General
 function GeneralSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [g, setG] = asS(()=> eprLoadStore().general);
   const [dirty, setDirty] = asS(false);
   const set = (k,v) => { setG(prev=>({...prev,[k]:v})); setDirty(true); };
-  const emailErr = !eprValidEmail(g.email) ? 'כתובת אימייל לא תקינה' : null;
-  const phoneErr = !eprValidPhone(g.phone) ? 'מספר טלפון לא תקין' : null;
+  const emailErr = !eprValidEmail(g.email) ? t('כתובת אימייל לא תקינה') : null;
+  const phoneErr = !eprValidPhone(g.phone) ? t('מספר טלפון לא תקין') : null;
   const valid = !emailErr && !phoneErr && g.orgName.trim().length > 0;
   const save = () => {
     if (!valid) {
-      window.eprToast && window.eprToast('יש לתקן את השדות שמסומנים באדום לפני שמירה', 'danger');
+      window.eprToast && window.eprToast(t('יש לתקן את השדות שמסומנים באדום לפני שמירה'), 'danger');
       return;
     }
     eprSaveSection('general', g);
     setDirty(false);
     if (window.eprApplyLang) window.eprApplyLang(g.lang);
     window.dispatchEvent(new CustomEvent('epr-lang-updated', { detail: g.lang }));
-    window.eprToast && window.eprToast(`הגדרות "${g.orgName}" נשמרו`, 'success');
+    window.eprToast && window.eprToast(`"${g.orgName}" — ${t('נשמרו')}`, 'success');
   };
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">פרטי הארגון</div><h3 className="ep-card-title">מידע כללי</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty||!valid} onClick={save} data-toast="off">{dirty?'שמירה':'נשמר'}</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('פרטי הארגון')}</div><h3 className="ep-card-title">{t('מידע כללי')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty||!valid} onClick={save} data-toast="off">{dirty?t('שמירה'):t('נשמר')}</button></div>
       <div className="ep-detail-grid">
-        <div className="ep-field"><label>שם הארגון</label><input value={g.orgName} onChange={e=>set('orgName',e.target.value)} aria-invalid={!g.orgName.trim()}/>{!g.orgName.trim()&&<FieldError>שם הארגון נדרש</FieldError>}</div>
-        <div className="ep-field"><label>מספר ח״פ</label><input value={g.taxId} onChange={e=>set('taxId',e.target.value)}/></div>
-        <div className="ep-field"><label>טלפון מוקד</label><input value={g.phone} onChange={e=>set('phone',e.target.value)} style={{direction:'ltr'}} aria-invalid={!!phoneErr}/><FieldError>{phoneErr}</FieldError></div>
-        <div className="ep-field"><label>אימייל ראשי</label><input value={g.email} onChange={e=>set('email',e.target.value)} style={{direction:'ltr'}} aria-invalid={!!emailErr}/><FieldError>{emailErr}</FieldError></div>
-        <div className="ep-field full"><label>כתובת</label><input value={g.address} onChange={e=>set('address',e.target.value)}/></div>
-        <div className="ep-field"><label>אזור זמן</label><select value={g.tz} onChange={e=>set('tz',e.target.value)}><option>Asia/Jerusalem</option><option>UTC</option></select></div>
-        <div className="ep-field"><label>שפת ברירת מחדל</label><select value={g.lang} onChange={e=>set('lang',e.target.value)}><option value="he">עברית</option><option value="en">English</option><option value="ar">العربية</option><option value="ru">Русский</option></select></div>
+        <div className="ep-field"><label>{t('שם הארגון')}</label><input value={g.orgName} onChange={e=>set('orgName',e.target.value)} aria-invalid={!g.orgName.trim()}/>{!g.orgName.trim()&&<FieldError>{t('שם הארגון נדרש')}</FieldError>}</div>
+        <div className="ep-field"><label>{t('מספר ח״פ')}</label><input value={g.taxId} onChange={e=>set('taxId',e.target.value)}/></div>
+        <div className="ep-field"><label>{t('טלפון מוקד')}</label><input value={g.phone} onChange={e=>set('phone',e.target.value)} style={{direction:'ltr'}} aria-invalid={!!phoneErr}/><FieldError>{phoneErr}</FieldError></div>
+        <div className="ep-field"><label>{t('אימייל ראשי')}</label><input value={g.email} onChange={e=>set('email',e.target.value)} style={{direction:'ltr'}} aria-invalid={!!emailErr}/><FieldError>{emailErr}</FieldError></div>
+        <div className="ep-field full"><label>{t('כתובת')}</label><input value={g.address} onChange={e=>set('address',e.target.value)}/></div>
+        <div className="ep-field"><label>{t('אזור זמן')}</label><select value={g.tz} onChange={e=>set('tz',e.target.value)}><option>Asia/Jerusalem</option><option>UTC</option></select></div>
+        <div className="ep-field"><label>{t('שפת ברירת מחדל')}</label><select value={g.lang} onChange={e=>set('lang',e.target.value)}><option value="he">עברית</option><option value="en">English</option><option value="ar">العربية</option><option value="ru">Русский</option></select></div>
       </div>
     </div>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">מערכת</div><h3 className="ep-card-title">ברירות מחדל ופורמטים</h3></div></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('מערכת')}</div><h3 className="ep-card-title">{t('ברירות מחדל ופורמטים')}</h3></div></div>
       <div className="ep-detail-grid">
-        <div className="ep-field"><label>פורמט תאריך</label><select value={g.dateFmt} onChange={e=>set('dateFmt',e.target.value)}><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option></select></div>
-        <div className="ep-field"><label>שעה</label><select value={g.timeFmt} onChange={e=>set('timeFmt',e.target.value)}><option>24h</option><option>12h</option></select></div>
-        <div className="ep-field"><label>מטבע</label><select value={g.currency} onChange={e=>set('currency',e.target.value)}><option>₪ ILS</option><option>$ USD</option></select></div>
-        <div className="ep-field"><label>מספור פניות</label><input value={g.reqFmt} onChange={e=>set('reqFmt',e.target.value)}/></div>
+        <div className="ep-field"><label>{t('פורמט תאריך')}</label><select value={g.dateFmt} onChange={e=>set('dateFmt',e.target.value)}><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option></select></div>
+        <div className="ep-field"><label>{t('שעה')}</label><select value={g.timeFmt} onChange={e=>set('timeFmt',e.target.value)}><option>24h</option><option>12h</option></select></div>
+        <div className="ep-field"><label>{t('מטבע')}</label><select value={g.currency} onChange={e=>set('currency',e.target.value)}><option>₪ ILS</option><option>$ USD</option></select></div>
+        <div className="ep-field"><label>{t('מספור פניות')}</label><input value={g.reqFmt} onChange={e=>set('reqFmt',e.target.value)}/></div>
       </div>
     </div>
   </>);
@@ -174,17 +180,19 @@ function GeneralSettings() {
 
 // 2. Business Calendar
 function BusinessCalendarSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">שעות פעילות</div><h3 className="ep-card-title">שעות מוקד שבועיות</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.eprToast && window.eprToast('שעות המוקד נשמרו', 'success')} data-toast="off">שמירה</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('שעות פעילות')}</div><h3 className="ep-card-title">{t('שעות מוקד שבועיות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(t('שעות המוקד נשמרו'), 'success')} data-toast="off">{t('שמירה')}</button></div>
       <table className="ep-table">
-        <thead><tr><th className="ep-th">יום</th><th className="ep-th">פעיל?</th><th className="ep-th">פתיחה</th><th className="ep-th">סגירה</th><th className="ep-th">הפסקה</th></tr></thead>
-        <tbody>{days.map((d,i)=>(<tr key={d}><td><b>{d}</b></td><td><Toggle defaultChecked={i!==6}/></td><td><input style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:90}} defaultValue={i===5?'08:00':'08:30'}/></td><td><input style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:90}} defaultValue={i===5?'13:00':'17:30'}/></td><td className="ep-muted" style={{fontSize:12}}>13:00–14:00</td></tr>))}</tbody>
+        <thead><tr><th className="ep-th">{t('יום')}</th><th className="ep-th">{t('פעיל?')}</th><th className="ep-th">{t('פתיחה')}</th><th className="ep-th">{t('סגירה')}</th><th className="ep-th">{t('הפסקה')}</th></tr></thead>
+        <tbody>{days.map((d,i)=>(<tr key={d}><td><b>{t(d)}</b></td><td><Toggle defaultChecked={i!==6}/></td><td><input style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:90}} defaultValue={i===5?'08:00':'08:30'}/></td><td><input style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:90}} defaultValue={i===5?'13:00':'17:30'}/></td><td className="ep-muted" style={{fontSize:12}}>13:00–14:00</td></tr>))}</tbody>
       </table>
     </div>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">חגים וחופשות</div><h3 className="ep-card-title">ימים שאינם נכללים ב-SLA</h3></div><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'holiday'}}))}>+ הוסף יום</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('חגים וחופשות')}</div><h3 className="ep-card-title">{t('ימים שאינם נכללים ב-SLA')}</h3></div><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'holiday'}}))}>{t('+ הוסף יום')}</button></div>
       <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
         {['פסח (4 ימים)','שבועות','ראש השנה (2)','יום כיפור','סוכות (4)','חנוכה','פורים','עצמאות','ל״ג בעומר','ערב חג'].map(h=>(<span key={h} className="ep-tag" style={{padding:'7px 14px',fontSize:13}}>{h}<span style={{marginRight:6,opacity:.5,cursor:'pointer'}}>×</span></span>))}
       </div>
@@ -196,30 +204,32 @@ function BusinessCalendarSettings() {
 function OrganizationSettings() {
   const d = window.eprData;
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">יחידות ארגוניות</div><h3 className="ep-card-title">היררכיית מחלקות</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))}><I.plus width={12} height={12}/>מחלקה חדשה</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('יחידות ארגוניות')}</div><h3 className="ep-card-title">{t('היררכיית מחלקות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))}><I.plus width={12} height={12}/>{t('מחלקה חדשה')}</button></div>
       <div style={{display:'flex',flexDirection:'column',gap:10}}>
         {d.departments.map(dep=>(
           <div key={dep.name} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:8}}>
             <div style={{width:6,height:36,background:dep.color,borderRadius:3}}/>
-            <div style={{flex:1}}><b>{dep.name}</b><div className="ep-muted" style={{fontSize:11,marginTop:2}}>{dep.open} פניות פתוחות · SLA {dep.sla}%</div></div>
-            <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`רשימת הצוותים של "${dep.name}"`, 'info')} data-toast="off">צוותים</button>
-            <button className="ep-icon-btn" style={{width:30,height:30}} title="ערוך" aria-label={`ערוך ${dep.name}`} onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))} data-toast="off"><I.note width={13} height={13}/></button>
-            <button className="ep-icon-btn" style={{width:30,height:30}} title="מחק" aria-label={`מחק ${dep.name}`} onClick={async()=>{
+            <div style={{flex:1}}><b>{dep.name}</b><div className="ep-muted" style={{fontSize:11,marginTop:2}}>{dep.open} {t('פניות פתוחות')} · SLA {dep.sla}%</div></div>
+            <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`${t('רשימת הצוותים של')} "${dep.name}"`, 'info')} data-toast="off">{t('צוותים')}</button>
+            <button className="ep-icon-btn" style={{width:30,height:30}} title={t('ערוך')} aria-label={`${t('ערוך')} ${dep.name}`} onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))} data-toast="off"><I.note width={13} height={13}/></button>
+            <button className="ep-icon-btn" style={{width:30,height:30}} title={t('מחק')} aria-label={`${t('מחק')} ${dep.name}`} onClick={async()=>{
               const ok = window.eprConfirm
-                ? await window.eprConfirm({ title:'מחיקת מחלקה', message:`המחלקה "${dep.name}" תוסר מהמערכת. פעולה זו תשפיע על השיוך של ${dep.open} פניות פתוחות. להמשיך?`, danger:true, confirmText:'מחק מחלקה' })
-                : window.confirm(`למחוק את המחלקה "${dep.name}"?`);
-              if (ok) window.eprToast && window.eprToast(`המחלקה "${dep.name}" נמחקה`, 'danger');
+                ? await window.eprConfirm({ title:t('מחיקת מחלקה'), message:`"${dep.name}" — ${dep.open} ${t('פניות פתוחות')}`, danger:true, confirmText:t('מחק מחלקה') })
+                : window.confirm(`${t('מחיקה')}: "${dep.name}"?`);
+              if (ok) window.eprToast && window.eprToast(`"${dep.name}" — ${t('נמחקה')}`, 'danger');
             }} data-toast="off"><I.close width={13} height={13}/></button>
           </div>
         ))}
       </div>
     </div>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">תפקידים</div><h3 className="ep-card-title">הגדרת תפקידים בארגון</h3></div></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('תפקידים')}</div><h3 className="ep-card-title">{t('הגדרת תפקידים בארגון')}</h3></div></div>
       <div className="ep-row3" style={{gap:12}}>
-        {[['מנהל מחלקה','עריכה מלאה',12],['ראש צוות','אישורים, שיבוץ',8],['רכז',' עריכה בסיסית',24],['מוקדן','קריאה ופתיחת פניות',18]].map(([t,p,n])=>(<div key={t} className="ep-feature"><b>{t}</b><p className="ep-muted" style={{margin:0,fontSize:12}}>{p}</p><div style={{fontSize:18,fontWeight:700,marginTop:6}}>{n} <span style={{fontSize:11,fontWeight:400,color:'var(--muted)'}}>משתמשים</span></div></div>))}
+        {[['מנהל מחלקה','עריכה מלאה',12],['ראש צוות','אישורים, שיבוץ',8],['רכז','עריכה בסיסית',24],['מוקדן','קריאה ופתיחת פניות',18]].map(([title,p,n])=>(<div key={title} className="ep-feature"><b>{t(title)}</b><p className="ep-muted" style={{margin:0,fontSize:12}}>{t(p)}</p><div style={{fontSize:18,fontWeight:700,marginTop:6}}>{n} <span style={{fontSize:11,fontWeight:400,color:'var(--muted)'}}>{t('משתמשים')}</span></div></div>))}
       </div>
     </div>
   </>);
@@ -228,6 +238,8 @@ function OrganizationSettings() {
 // 4. Topics (Categories)
 function TopicsSettings() {
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const cats=[
     {n:'תשתיות וכבישים',sub:['מפגעי בטיחות','שלטי הכוונה','מהמורות','תאורת רחוב','איי תנועה'],color:'#0F968C'},
     {n:'סביבה וניקיון',sub:['פינוי גזם','פחים שבורים','פסולת מבולגנת','הדברה'],color:'#D4793A'},
@@ -237,15 +249,15 @@ function TopicsSettings() {
   ];
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">קטגוריות פניות</div><h3 className="ep-card-title">5 קטגוריות ראשיות · 23 תת-קטגוריות</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'category'}}))}><I.plus width={12} height={12}/>קטגוריה חדשה</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('קטגוריות פניות')}</div><h3 className="ep-card-title">5 {t('קטגוריות')} · 23 {t('תת-קטגוריות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'category'}}))}><I.plus width={12} height={12}/>{t('קטגוריה חדשה')}</button></div>
       <div style={{display:'flex',flexDirection:'column',gap:14}}>
         {cats.map(c=>(
           <div key={c.n} style={{border:'1px solid var(--border)',borderRadius:9,overflow:'hidden'}}>
             <div style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:c.color+'10',borderBottom:'1px solid var(--border)'}}>
               <div style={{width:10,height:10,borderRadius:'50%',background:c.color}}/>
               <b>{c.n}</b>
-              <span className="ep-muted" style={{fontSize:11,marginRight:'auto'}}>{c.sub.length} תת-קטגוריות</span>
-              <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'category'}}))}>+ הוסף</button>
+              <span className="ep-muted" style={{fontSize:11,marginRight:'auto'}}>{c.sub.length} {t('תת-קטגוריות')}</span>
+              <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'category'}}))}>{t('+ הוסף')}</button>
             </div>
             <div style={{display:'flex',flexWrap:'wrap',gap:6,padding:'10px 14px'}}>
               {c.sub.map(s=>(<span key={s} className="ep-tag" style={{fontSize:12}}>{s}</span>))}
@@ -259,6 +271,8 @@ function TopicsSettings() {
 
 // 5. SLA
 function SlaSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [rows, setRows] = asS(()=> eprLoadStore().sla.rows);
   const [dirty, setDirty] = asS(false);
   const updateRow = (i, k, v) => {
@@ -268,24 +282,24 @@ function SlaSettings() {
   const save = () => {
     eprSaveSection('sla', { rows });
     setDirty(false);
-    window.eprToast && window.eprToast('הגדרות SLA נשמרו לכל ארבע העדיפויות', 'success');
+    window.eprToast && window.eprToast(t('הגדרות SLA נשמרו לכל ארבע העדיפויות'), 'success');
   };
   const inputStyle = {padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:120};
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">זמני יעד</div><h3 className="ep-card-title">SLA לפי עדיפות</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty} onClick={save} data-toast="off">{dirty?'שמירה':'נשמר'}</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('זמני יעד')}</div><h3 className="ep-card-title">{t('SLA לפי עדיפות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty} onClick={save} data-toast="off">{dirty?t('שמירה'):t('נשמר')}</button></div>
       <table className="ep-table">
-        <thead><tr><th className="ep-th">עדיפות</th><th className="ep-th">זמן תגובה ראשונה</th><th className="ep-th">זמן פתרון</th><th className="ep-th">אסקלציה לאחר</th><th className="ep-th">צבע</th></tr></thead>
+        <thead><tr><th className="ep-th">{t('עדיפות')}</th><th className="ep-th">{t('זמן תגובה ראשונה')}</th><th className="ep-th">{t('זמן פתרון')}</th><th className="ep-th">{t('אסקלציה לאחר')}</th><th className="ep-th">{t('צבע')}</th></tr></thead>
         <tbody>
           {rows.map((r,i)=>(
             <tr key={r.label}>
-              <td><span className="ep-pri"><span className="ep-pri-dot" style={{background:r.color}}/>{r.label}</span></td>
+              <td><span className="ep-pri"><span className="ep-pri-dot" style={{background:r.color}}/>{t(r.label)}</span></td>
               <td><input value={r.first} onChange={e=>updateRow(i,'first',e.target.value)} style={inputStyle}/></td>
               <td><input value={r.resolve} onChange={e=>updateRow(i,'resolve',e.target.value)} style={inputStyle}/></td>
               <td><input value={r.esc} onChange={e=>updateRow(i,'esc',e.target.value)} style={inputStyle}/></td>
               <td>
-                <label title="בחר צבע" style={{display:'inline-flex',alignItems:'center',gap:6,cursor:'pointer'}}>
-                  <input type="color" value={r.color} onChange={e=>updateRow(i,'color',e.target.value)} style={{width:0,height:0,opacity:0,position:'absolute'}} aria-label={`צבע עבור ${r.label}`}/>
+                <label title={t('בחר צבע')} style={{display:'inline-flex',alignItems:'center',gap:6,cursor:'pointer'}}>
+                  <input type="color" value={r.color} onChange={e=>updateRow(i,'color',e.target.value)} style={{width:0,height:0,opacity:0,position:'absolute'}} aria-label={`${t('צבע עבור')} ${t(r.label)}`}/>
                   <span style={{width:24,height:24,background:r.color,borderRadius:4,border:'1px solid var(--border)',display:'inline-block'}}/>
                   <span className="ep-mono ep-muted" style={{fontSize:11}}>{r.color.toUpperCase()}</span>
                 </label>
@@ -296,9 +310,9 @@ function SlaSettings() {
       </table>
     </div>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">חריגות</div><h3 className="ep-card-title">התרעות אסקלציה</h3></div></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('חריגות')}</div><h3 className="ep-card-title">{t('התרעות אסקלציה')}</h3></div></div>
       <div style={{display:'flex',flexDirection:'column',gap:10}}>
-        {[['התראה לראש צוות',true],['העלאת עדיפות אוטומטית',true],['מייל לפונה על עיכוב',false],['דיווח יומי למנהלי מחלקות',true]].map(([t,c])=>(<div key={t} className="row"><Toggle defaultChecked={c}/><span style={{fontSize:14}}>{t}</span></div>))}
+        {[['התראה לראש צוות',true],['העלאת עדיפות אוטומטית',true],['מייל לפונה על עיכוב',false],['דיווח יומי למנהלי מחלקות',true]].map(([title,c])=>(<div key={title} className="row"><Toggle defaultChecked={c}/><span style={{fontSize:14}}>{t(title)}</span></div>))}
       </div>
     </div>
   </>);
@@ -307,10 +321,12 @@ function SlaSettings() {
 // 6. Forms
 function FormsSettings() {
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const tt = window.eprT || ((s)=>s);
   return (<div className="ep-card">
-    <div className="ep-card-head"><div><div className="ep-card-eb">טפסי פנייה</div><h3 className="ep-card-title">8 טפסים פעילים</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new Event('open-form-builder'))}><I.plus width={12} height={12}/>טופס חדש</button></div>
-    <table className="ep-table"><thead><tr><th className="ep-th">שם הטופס</th><th className="ep-th">קטגוריה</th><th className="ep-th">שדות</th><th className="ep-th">פעיל?</th><th className="ep-th">שימוש (חודש)</th><th className="ep-th"></th></tr></thead>
-      <tbody>{[['דיווח מפגע','תשתיות',8,true,182],['בקשת היתר בנייה','הנדסה',24,true,46],['פינוי גזם','סביבה',5,true,210],['השקיה','גינון',6,true,32],['בעיית הסעות','חינוך',7,true,18],['הצעת ייעול','כללי',4,true,9],['תלונה רשמית','כללי',12,false,24],['תקלת תאורה','תשתיות',5,true,58]].map(([n,c,f,a,u])=>(<tr key={n}><td><b>{n}</b></td><td><span className="ep-tag">{c}</span></td><td>{f} שדות</td><td><Toggle defaultChecked={a}/></td><td><b>{u}</b></td><td className="end"><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new Event('open-form-builder'))} data-toast="off">עריכה</button></td></tr>))}</tbody>
+    <div className="ep-card-head"><div><div className="ep-card-eb">{tt('טפסי פנייה')}</div><h3 className="ep-card-title">8 {tt('טפסים פעילים')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new Event('open-form-builder'))}><I.plus width={12} height={12}/>{tt('טופס חדש')}</button></div>
+    <table className="ep-table"><thead><tr><th className="ep-th">{tt('שם הטופס')}</th><th className="ep-th">{tt('קטגוריה')}</th><th className="ep-th">{tt('שדות')}</th><th className="ep-th">{tt('פעיל?')}</th><th className="ep-th">{tt('שימוש (חודש)')}</th><th className="ep-th"></th></tr></thead>
+      <tbody>{[['דיווח מפגע','תשתיות',8,true,182],['בקשת היתר בנייה','הנדסה',24,true,46],['פינוי גזם','סביבה',5,true,210],['השקיה','גינון',6,true,32],['בעיית הסעות','חינוך',7,true,18],['הצעת ייעול','כללי',4,true,9],['תלונה רשמית','כללי',12,false,24],['תקלת תאורה','תשתיות',5,true,58]].map(([n,c,f,a,u])=>(<tr key={n}><td><b>{n}</b></td><td><span className="ep-tag">{c}</span></td><td>{f} {tt('שדות')}</td><td><Toggle defaultChecked={a}/></td><td><b>{u}</b></td><td className="end"><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new Event('open-form-builder'))} data-toast="off">{tt('עריכה')}</button></td></tr>))}</tbody>
     </table>
   </div>);
 }
@@ -318,15 +334,17 @@ function FormsSettings() {
 // 7. Channels
 function ChannelsSettings() {
   const I=window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const ch=[['טלפון',true,42,'phone'],['אפליקציה',true,28,'phone'],['אתר עירייה',true,18,'doc'],['SMS',true,7,'msg'],['Email',true,3,'mail'],['וואטסאפ',false,0,'msg'],['מוקד 106',true,2,'phone']];
   return (<div className="ep-card">
-    <div className="ep-card-head"><div><div className="ep-card-eb">ערוצי קבלת פניות</div><h3 className="ep-card-title">חיבור פניות נכנסות</h3></div></div>
+    <div className="ep-card-head"><div><div className="ep-card-eb">{t('ערוצי קבלת פניות')}</div><h3 className="ep-card-title">{t('חיבור פניות נכנסות')}</h3></div></div>
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
       {ch.map(([n,a,p,ic])=>(<div key={n} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:8}}>
         <div className="ep-feed-ic">{ic==='phone'?<I.phone/>:ic==='mail'?<I.mail/>:ic==='msg'?<I.msg/>:<I.doc/>}</div>
-        <div style={{flex:1}}><b>{n}</b><div className="ep-muted" style={{fontSize:11,marginTop:2}}>{a?`${p}% מהפניות הנכנסות`:'לא פעיל'}</div></div>
+        <div style={{flex:1}}><b>{n}</b><div className="ep-muted" style={{fontSize:11,marginTop:2}}>{a?`${p}% ${t('מהפניות הנכנסות')}`:t('לא פעיל')}</div></div>
         <Toggle defaultChecked={a}/>
-        <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`קונפיגורציה של "${n}" נפתחה`, 'info')} data-toast="off">קונפיגורציה</button>
+        <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`${t('הקונפיגורציה של')} "${n}" ${t('נפתחה')}`, 'info')} data-toast="off">{t('קונפיגורציה')}</button>
       </div>))}
     </div>
   </div>);
@@ -334,11 +352,13 @@ function ChannelsSettings() {
 
 // 8. Auto Routing
 function RoutingSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">חוקי ניתוב</div><h3 className="ep-card-title">12 חוקים פעילים</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'rule'}}))}>+ חוק חדש</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('חוקי ניתוב')}</div><h3 className="ep-card-title">12 {t('חוקים פעילים')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'rule'}}))}>{t('+ חוק חדש')}</button></div>
       <table className="ep-table">
-        <thead><tr><th className="ep-th">#</th><th className="ep-th">תנאי</th><th className="ep-th">פעולה</th><th className="ep-th">פעיל</th></tr></thead>
+        <thead><tr><th className="ep-th">#</th><th className="ep-th">{t('תנאי')}</th><th className="ep-th">{t('פעולה')}</th><th className="ep-th">{t('פעיל')}</th></tr></thead>
         <tbody>{[
           ['קטגוריה = מפגעי בטיחות','שיוך אוטומטי לתשתיות + עדיפות גבוהה'],
           ['מילים: ״סכנת חיים״','עדיפות דחוף + התראה למנהל'],
@@ -354,10 +374,12 @@ function RoutingSettings() {
 
 // 9. Templates
 function TemplatesSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   return (<div className="ep-card">
-    <div className="ep-card-head"><div><div className="ep-card-eb">תבניות הודעה</div><h3 className="ep-card-title">SMS, Email ופוש</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'template'}}))}>+ תבנית</button></div>
-    <table className="ep-table"><thead><tr><th className="ep-th">שם</th><th className="ep-th">סוג</th><th className="ep-th">משתנים</th><th className="ep-th">שימוש</th></tr></thead>
-      <tbody>{[['פתיחת פנייה','SMS','{name}, {ref}',1842],['עדכון סטטוס','Email','{name}, {status}, {clerk}',1108],['סגירת פנייה','SMS','{name}, {ref}',1320],['חריגת SLA - מנהל','Email','{ref}, {dept}, {hours}',92],['התראה לרכז','Push','{ref}, {priority}',428],['תזכורת תשלום','SMS','{name}, {amount}, {due}',512]].map(t=>(<tr key={t[0]}><td><b>{t[0]}</b></td><td><span className="ep-tag">{t[1]}</span></td><td className="ep-mono ep-muted" style={{fontSize:11}}>{t[2]}</td><td><b>{t[3].toLocaleString('he-IL')}</b></td></tr>))}</tbody>
+    <div className="ep-card-head"><div><div className="ep-card-eb">{t('תבניות הודעה')}</div><h3 className="ep-card-title">{t('SMS, Email ופוש')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'template'}}))}>{t('+ תבנית')}</button></div>
+    <table className="ep-table"><thead><tr><th className="ep-th">{t('שם')}</th><th className="ep-th">{t('סוג')}</th><th className="ep-th">{t('משתנים')}</th><th className="ep-th">{t('שימוש')}</th></tr></thead>
+      <tbody>{[['פתיחת פנייה','SMS','{name}, {ref}',1842],['עדכון סטטוס','Email','{name}, {status}, {clerk}',1108],['סגירת פנייה','SMS','{name}, {ref}',1320],['חריגת SLA - מנהל','Email','{ref}, {dept}, {hours}',92],['התראה לרכז','Push','{ref}, {priority}',428],['תזכורת תשלום','SMS','{name}, {amount}, {due}',512]].map(row=>(<tr key={row[0]}><td><b>{row[0]}</b></td><td><span className="ep-tag">{row[1]}</span></td><td className="ep-mono ep-muted" style={{fontSize:11}}>{row[2]}</td><td><b>{row[3].toLocaleString('he-IL')}</b></td></tr>))}</tbody>
     </table>
   </div>);
 }
@@ -365,6 +387,8 @@ function TemplatesSettings() {
 // 10. Integrations
 function IntegrationsSettings() {
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const ints=[
     {n:'מערכת תשלומים',d:'Pelecard payment gateway',s:true},
     {n:'GIS עירוני',d:'מפת רחובות וגושים',s:true},
@@ -376,16 +400,16 @@ function IntegrationsSettings() {
     {n:'Twilio SMS',d:'שליחת הודעות SMS',s:true},
   ];
   return (<div className="ep-card">
-    <div className="ep-card-head"><div><div className="ep-card-eb">אינטגרציות</div><h3 className="ep-card-title">{ints.filter(i=>i.s).length}/{ints.length} מחוברים</h3></div><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'integration'}}))}>+ הוסף אינטגרציה</button></div>
+    <div className="ep-card-head"><div><div className="ep-card-eb">{t('אינטגרציות')}</div><h3 className="ep-card-title">{ints.filter(i=>i.s).length}/{ints.length} {t('מחוברים')}</h3></div><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'integration'}}))}>{t('+ הוסף אינטגרציה')}</button></div>
     <div className="ep-row2" style={{gap:12}}>
       {ints.map(it=>(<div key={it.n} style={{padding:14,border:'1px solid var(--border)',borderRadius:9,display:'flex',alignItems:'center',gap:14}}>
         <div className={`ep-feed-ic ic-${it.s?'check':'x'}`}>{it.s?<I.check/>:<I.close/>}</div>
         <div style={{flex:1,minWidth:0}}><b>{it.n}</b><div className="ep-muted" style={{fontSize:11,marginTop:2}}>{it.d}</div></div>
-        <span className={`ep-tag ${it.s?'green':'slate'}`}>{it.s?'מחובר':'לא פעיל'}</span>
+        <span className={`ep-tag ${it.s?'green':'slate'}`}>{it.s?t('מחובר'):t('לא פעיל')}</span>
         <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>{
-          if (it.s) window.eprToast && window.eprToast(`הגדרות "${it.n}" נפתחו`, 'info');
+          if (it.s) window.eprToast && window.eprToast(`${t('הגדרות')} "${it.n}" ${t('נפתחו')}`, 'info');
           else window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'integration'}}));
-        }} data-toast="off">{it.s?'הגדרות':'חיבור'}</button>
+        }} data-toast="off">{it.s?t('הגדרות'):t('חיבור')}</button>
       </div>))}
     </div>
   </div>);
@@ -393,23 +417,25 @@ function IntegrationsSettings() {
 
 // 11. Security
 function SecuritySettings() {
+  if (window.useEprLang) window.useEprLang();
+  const tt = window.eprT || ((s)=>s);
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">אבטחה</div><h3 className="ep-card-title">מדיניות סיסמה</h3></div></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{tt('אבטחה')}</div><h3 className="ep-card-title">{tt('מדיניות סיסמה')}</h3></div></div>
       <div className="ep-detail-grid">
-        <div className="ep-field"><label>אורך מינימלי</label><input defaultValue="10"/></div>
-        <div className="ep-field"><label>תוקף סיסמה (ימים)</label><input defaultValue="90"/></div>
-        <div className="ep-field"><label>היסטוריית סיסמאות</label><input defaultValue="5"/></div>
-        <div className="ep-field"><label>נעילה לאחר ניסיונות</label><input defaultValue="5"/></div>
+        <div className="ep-field"><label>{tt('אורך מינימלי')}</label><input defaultValue="10"/></div>
+        <div className="ep-field"><label>{tt('תוקף סיסמה (ימים)')}</label><input defaultValue="90"/></div>
+        <div className="ep-field"><label>{tt('היסטוריית סיסמאות')}</label><input defaultValue="5"/></div>
+        <div className="ep-field"><label>{tt('נעילה לאחר ניסיונות')}</label><input defaultValue="5"/></div>
       </div>
       <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:8}}>
-        {[['מורכבות סיסמה (אותיות גדולות + מספרים + סימנים)',true],['אימות דו-שלבי (2FA) חובה למנהלים',true],['SSO (Single Sign-On) דרך SAML',true],['חסימה אוטומטית לאחר 30 דק׳ חוסר פעילות',true],['CAPTCHA בהתחברות',false]].map(([t,c])=>(<div key={t} className="row"><Toggle defaultChecked={c}/><span style={{fontSize:14}}>{t}</span></div>))}
+        {[['מורכבות סיסמה (אותיות גדולות + מספרים + סימנים)',true],['אימות דו-שלבי (2FA) חובה למנהלים',true],['SSO (Single Sign-On) דרך SAML',true],['חסימה אוטומטית לאחר 30 דק׳ חוסר פעילות',true],['CAPTCHA בהתחברות',false]].map(([title,c])=>(<div key={title} className="row"><Toggle defaultChecked={c}/><span style={{fontSize:14}}>{tt(title)}</span></div>))}
       </div>
     </div>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">הרשאות</div><h3 className="ep-card-title">מטריצת תפקידים</h3></div></div>
-      <table className="ep-table"><thead><tr><th className="ep-th">פעולה</th><th className="ep-th">מנהל</th><th className="ep-th">ראש צוות</th><th className="ep-th">רכז</th><th className="ep-th">מוקדן</th></tr></thead>
-        <tbody>{[['צפייה בפניות',1,1,1,1],['עריכת פניות',1,1,1,0],['מחיקת פניות',1,0,0,0],['אישור תקציבים',1,1,0,0],['הוספת משתמשים',1,0,0,0],['שינוי הגדרות',1,0,0,0],['ייצוא דוחות',1,1,1,0]].map(r=>(<tr key={r[0]}><td>{r[0]}</td>{r.slice(1).map((v,i)=>(<td key={i}>{v?<span style={{color:'var(--green)'}}>✓</span>:<span style={{color:'var(--border-dark)'}}>—</span>}</td>))}</tr>))}</tbody>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{tt('הרשאות')}</div><h3 className="ep-card-title">{tt('מטריצת תפקידים')}</h3></div></div>
+      <table className="ep-table"><thead><tr><th className="ep-th">{tt('פעולה')}</th><th className="ep-th">{tt('מנהל')}</th><th className="ep-th">{tt('ראש צוות')}</th><th className="ep-th">{tt('רכז')}</th><th className="ep-th">{tt('מוקדן')}</th></tr></thead>
+        <tbody>{[['צפייה בפניות',1,1,1,1],['עריכת פניות',1,1,1,0],['מחיקת פניות',1,0,0,0],['אישור תקציבים',1,1,0,0],['הוספת משתמשים',1,0,0,0],['שינוי הגדרות',1,0,0,0],['ייצוא דוחות',1,1,1,0]].map(r=>(<tr key={r[0]}><td>{tt(r[0])}</td>{r.slice(1).map((v,i)=>(<td key={i}>{v?<span style={{color:'var(--green)'}}>✓</span>:<span style={{color:'var(--border-dark)'}}>—</span>}</td>))}</tr>))}</tbody>
       </table>
     </div>
   </>);
@@ -417,22 +443,25 @@ function SecuritySettings() {
 
 // 12. Notifications
 function NotificationsSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const tt = window.eprT || ((s)=>s);
   return (<div className="ep-card">
-    <div className="ep-card-head"><div><div className="ep-card-eb">התראות</div><h3 className="ep-card-title">מי מקבל מה</h3></div></div>
-    <table className="ep-table"><thead><tr><th className="ep-th">אירוע</th><th className="ep-th">Email</th><th className="ep-th">SMS</th><th className="ep-th">Push</th><th className="ep-th">מערכת</th></tr></thead>
-      <tbody>{[['פנייה חדשה',1,0,1,1],['חריגת SLA',1,1,1,1],['הקצאה אישית',0,0,1,1],['סגירת פנייה',1,0,0,1],['תגובה מתושב',0,0,1,1],['דוח שבועי',1,0,0,0],['התראת מערכת',1,1,1,1],['בקשת הצטרפות חדשה',1,0,0,1]].map(r=>(<tr key={r[0]}><td>{r[0]}</td>{r.slice(1).map((v,i)=>(<td key={i}><Toggle defaultChecked={v===1}/></td>))}</tr>))}</tbody>
+    <div className="ep-card-head"><div><div className="ep-card-eb">{tt('התראות')}</div><h3 className="ep-card-title">{tt('מי מקבל מה')}</h3></div></div>
+    <table className="ep-table"><thead><tr><th className="ep-th">{tt('אירוע')}</th><th className="ep-th">Email</th><th className="ep-th">SMS</th><th className="ep-th">Push</th><th className="ep-th">{tt('מערכת')}</th></tr></thead>
+      <tbody>{[['פנייה חדשה',1,0,1,1],['חריגת SLA',1,1,1,1],['הקצאה אישית',0,0,1,1],['סגירת פנייה',1,0,0,1],['תגובה מתושב',0,0,1,1],['דוח שבועי',1,0,0,0],['התראת מערכת',1,1,1,1],['בקשת הצטרפות חדשה',1,0,0,1]].map(r=>(<tr key={r[0]}><td>{tt(r[0])}</td>{r.slice(1).map((v,i)=>(<td key={i}><Toggle defaultChecked={v===1}/></td>))}</tr>))}</tbody>
     </table>
   </div>);
 }
 
 // 13. Branding
 function BrandingSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const tt = window.eprT || ((s)=>s);
   const palette = ['#0F968C','#3D7BC8','#7A6BD8','#D4793A','#5B945C','#E15454','#1A2D2E','#2AA7B8'];
   const [b, setB] = asS(()=> eprLoadStore().branding);
   const [dirty, setDirty] = asS(false);
   const fileRef = asR(null);
 
-  // Live preview: apply changes to CSS variable immediately
   asE(()=>{ eprApplyBranding(b); }, [b.accent, b.logoDataUrl]);
 
   const set = (k,v) => { setB(prev=>({...prev,[k]:v})); setDirty(true); };
@@ -441,11 +470,11 @@ function BrandingSettings() {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     if (!/^image\//.test(f.type)) {
-      window.eprToast && window.eprToast('יש לבחור קובץ תמונה (PNG / SVG / JPG)', 'danger');
+      window.eprToast && window.eprToast(tt('יש לבחור קובץ תמונה (PNG / SVG / JPG)'), 'danger');
       return;
     }
     if (f.size > 2 * 1024 * 1024) {
-      window.eprToast && window.eprToast('הקובץ חורג מ-2MB', 'danger');
+      window.eprToast && window.eprToast(tt('הקובץ חורג מ-2MB'), 'danger');
       return;
     }
     const reader = new FileReader();
@@ -461,7 +490,7 @@ function BrandingSettings() {
           logoSize: `${img.naturalWidth}×${img.naturalHeight}px · ${ext}`,
         }));
         setDirty(true);
-        window.eprToast && window.eprToast(`לוגו ${f.name} נטען לתצוגה מקדימה — לחץ שמירה כדי לאשר`, 'info');
+        window.eprToast && window.eprToast(`${tt('לוגו')} ${f.name} ${tt('נטען לתצוגה מקדימה — לחץ שמירה כדי לאשר')}`, 'info');
       };
       img.onerror = () => {
         setB(prev=>({ ...prev, logoDataUrl:dataUrl, logoName:f.name, logoSize:`${(f.size/1024).toFixed(0)}KB · ${ext}` }));
@@ -474,7 +503,7 @@ function BrandingSettings() {
   };
 
   const removeLogo = () => {
-    setB(prev=>({...prev, logoDataUrl:null, logoName:'(אין לוגו מותאם)', logoSize:'משתמש בברירת המחדל'}));
+    setB(prev=>({...prev, logoDataUrl:null, logoName:tt('(אין לוגו מותאם)'), logoSize:tt('משתמש בברירת המחדל')}));
     setDirty(true);
   };
 
@@ -482,7 +511,7 @@ function BrandingSettings() {
     eprSaveSection('branding', b);
     eprApplyBranding(b);
     setDirty(false);
-    window.eprToast && window.eprToast(`המיתוג נשמר — צבע ראשי ${b.accent.toUpperCase()}`, 'success');
+    window.eprToast && window.eprToast(`${tt('המיתוג נשמר — צבע ראשי')} ${b.accent.toUpperCase()}`, 'success');
   };
 
   const reset = () => {
@@ -491,59 +520,59 @@ function BrandingSettings() {
     eprSaveSection('branding', defaults);
     eprApplyBranding(defaults);
     setDirty(false);
-    window.eprToast && window.eprToast('המיתוג שוחזר לברירת המחדל', 'info');
+    window.eprToast && window.eprToast(tt('המיתוג שוחזר לברירת המחדל'), 'info');
   };
 
   return (<>
     <div className="ep-card">
       <div className="ep-card-head">
-        <div><div className="ep-card-eb">מיתוג</div><h3 className="ep-card-title">לוגו וצבעים</h3></div>
+        <div><div className="ep-card-eb">{tt('מיתוג')}</div><h3 className="ep-card-title">{tt('לוגו וצבעים')}</h3></div>
         <div className="row">
-          <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={reset} data-toast="off">איפוס</button>
-          <button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty} onClick={save} data-toast="off">{dirty?'שמירה':'נשמר'}</button>
+          <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={reset} data-toast="off">{tt('איפוס')}</button>
+          <button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty} onClick={save} data-toast="off">{dirty?tt('שמירה'):tt('נשמר')}</button>
         </div>
       </div>
       <div className="ep-detail-grid">
         <div className="ep-field full">
-          <label>לוגו ארגון</label>
-          <input ref={fileRef} type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" onChange={onLogoFile} style={{display:'none'}} aria-label="העלאת קובץ לוגו"/>
+          <label>{tt('לוגו ארגון')}</label>
+          <input ref={fileRef} type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" onChange={onLogoFile} style={{display:'none'}} aria-label={tt('העלאת קובץ לוגו')}/>
           <div style={{display:'flex',alignItems:'center',gap:12,padding:14,border:'1.5px dashed var(--border-dark)',borderRadius:8,background:'var(--cream)'}}>
             <div className="ep-logo" style={{background:b.accent, overflow:'hidden'}}>
               {b.logoDataUrl
-                ? <img src={b.logoDataUrl} alt="לוגו" style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
+                ? <img src={b.logoDataUrl} alt={tt('לוגו')} style={{width:'100%',height:'100%',objectFit:'contain',display:'block'}}/>
                 : '🏛'}
             </div>
             <div style={{flex:1,minWidth:0}}>
               <b style={{fontSize:13}}>{b.logoName}</b>
               <div className="ep-muted" style={{fontSize:11}}>{b.logoSize}</div>
             </div>
-            {b.logoDataUrl && <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={removeLogo} data-toast="off">הסר</button>}
-            <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>fileRef.current && fileRef.current.click()} data-toast="off">{b.logoDataUrl?'החלף':'העלה לוגו'}</button>
+            {b.logoDataUrl && <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={removeLogo} data-toast="off">{tt('הסר')}</button>}
+            <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>fileRef.current && fileRef.current.click()} data-toast="off">{b.logoDataUrl?tt('החלף'):tt('העלה לוגו')}</button>
           </div>
         </div>
 
         <div className="ep-field full">
-          <label>צבע עיקרי <span className="ep-muted ep-mono" style={{fontSize:11,fontWeight:400}}>{b.accent.toUpperCase()}</span></label>
+          <label>{tt('צבע עיקרי')} <span className="ep-muted ep-mono" style={{fontSize:11,fontWeight:400}}>{b.accent.toUpperCase()}</span></label>
           <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:4,alignItems:'center'}}>
             {palette.map(c=>(
-              <button key={c} type="button" aria-label={`בחר צבע ${c}`} title={c}
+              <button key={c} type="button" aria-label={`${tt('בחר צבע')} ${c}`} title={c}
                 onClick={()=>set('accent',c)} data-toast="off"
                 style={{width:30,height:30,borderRadius:6,background:c,cursor:'pointer',transition:'transform .12s',
                         border:b.accent===c?'3px solid var(--text)':'1px solid var(--border)',
                         transform:b.accent===c?'scale(1.08)':'scale(1)'}}/>
             ))}
-            <label title="בחר צבע מותאם" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 10px',border:'1px dashed var(--border-dark)',borderRadius:6,cursor:'pointer',fontSize:12}}>
-              <input type="color" value={b.accent} onChange={e=>set('accent',e.target.value)} style={{width:24,height:24,border:'none',padding:0,cursor:'pointer',background:'transparent'}} aria-label="בחר צבע מותאם"/>
-              <span>צבע מותאם</span>
+            <label title={tt('צבע מותאם')} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 10px',border:'1px dashed var(--border-dark)',borderRadius:6,cursor:'pointer',fontSize:12}}>
+              <input type="color" value={b.accent} onChange={e=>set('accent',e.target.value)} style={{width:24,height:24,border:'none',padding:0,cursor:'pointer',background:'transparent'}} aria-label={tt('צבע מותאם')}/>
+              <span>{tt('צבע מותאם')}</span>
             </label>
           </div>
         </div>
 
-        <div className="ep-field"><label>שם אפליקציה (פורטל תושב)</label><input value={b.appName} onChange={e=>set('appName',e.target.value)}/></div>
-        <div className="ep-field"><label>סלוגן</label><input value={b.slogan} onChange={e=>set('slogan',e.target.value)}/></div>
+        <div className="ep-field"><label>{tt('שם אפליקציה (פורטל תושב)')}</label><input value={b.appName} onChange={e=>set('appName',e.target.value)}/></div>
+        <div className="ep-field"><label>{tt('סלוגן')}</label><input value={b.slogan} onChange={e=>set('slogan',e.target.value)}/></div>
 
         <div className="ep-field full">
-          <label>תצוגה מקדימה</label>
+          <label>{tt('תצוגה מקדימה')}</label>
           <div style={{padding:'18px 20px',borderRadius:10,background:'linear-gradient(135deg, '+b.accent+' 0%, '+b.accent+'cc 100%)',color:'#fff',display:'flex',alignItems:'center',gap:14}}>
             <div style={{width:48,height:48,borderRadius:10,background:'rgba(255,255,255,.18)',display:'grid',placeItems:'center',overflow:'hidden',fontSize:22,fontWeight:800}}>
               {b.logoDataUrl
@@ -551,17 +580,17 @@ function BrandingSettings() {
                 : 'E'}
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:16,fontWeight:700,letterSpacing:'-.01em'}}>{b.appName||'שם אפליקציה'}</div>
-              <div style={{fontSize:12,opacity:.9}}>{b.slogan||'סלוגן'}</div>
+              <div style={{fontSize:16,fontWeight:700,letterSpacing:'-.01em'}}>{b.appName||tt('שם אפליקציה (פורטל תושב)')}</div>
+              <div style={{fontSize:12,opacity:.9}}>{b.slogan||tt('סלוגן')}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">פורטל תושב</div><h3 className="ep-card-title">מה התושב רואה</h3></div></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{tt('פורטל תושב')}</div><h3 className="ep-card-title">{tt('מה התושב רואה')}</h3></div></div>
       <div className="ep-row3" style={{gap:12}}>
-        {[['דף פניות','פתיחה ומעקב פניות',true],['דף מסמכים','אישורים והיתרים',true],['דף תשלומים','ארנונה ומיסים',true],['דף אירועים','אירועי עיר ופעילויות',false],['פורום קהילה','דיון בין תושבים',false],['פניית VIP','חבר מועצה / יועץ',true]].map(([n,d,a])=>(<div key={n} className="ep-feature"><div className="row"><b style={{flex:1}}>{n}</b><Toggle defaultChecked={a}/></div><p className="ep-muted" style={{margin:0,fontSize:12}}>{d}</p></div>))}
+        {[['דף פניות','פתיחה ומעקב פניות',true],['דף מסמכים','אישורים והיתרים',true],['דף תשלומים','ארנונה ומיסים',true],['דף אירועים','אירועי עיר ופעילויות',false],['פורום קהילה','דיון בין תושבים',false],['פניית VIP','חבר מועצה / יועץ',true]].map(([n,desc,a])=>(<div key={n} className="ep-feature"><div className="row"><b style={{flex:1}}>{tt(n)}</b><Toggle defaultChecked={a}/></div><p className="ep-muted" style={{margin:0,fontSize:12}}>{tt(desc)}</p></div>))}
       </div>
     </div>
   </>);
@@ -569,6 +598,8 @@ function BrandingSettings() {
 
 // 14. Audit
 function AuditSettings() {
+  if (window.useEprLang) window.useEprLang();
+  const tt = window.eprT || ((s)=>s);
   const events=[
     {t:'08:42',u:'מיכל כהן',a:'התחברות למערכת','d':'IP 10.0.5.21',k:'login'},
     {t:'08:51',u:'מיכל כהן',a:'שינוי הגדרות SLA','d':'עדיפות גבוה: 24→18 שעות',k:'edit'},
@@ -583,8 +614,8 @@ function AuditSettings() {
   const colors={login:'#3D7BC8',edit:'#0F968C',create:'#5B945C',alert:'#E15454',add:'#7A6BD8',export:'#D4793A',delete:'#B23838'};
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">יומן ביקורת</div><h3 className="ep-card-title">פעילות היום במערכת · 247 אירועים</h3></div><div className="row"><button className="ep-btn ep-btn-ghost ep-btn-sm"><I.filter width={12} height={12}/>סינון</button><button className="ep-btn ep-btn-ghost ep-btn-sm"><I.download width={12} height={12}/>ייצוא</button></div></div>
-      <table className="ep-table"><thead><tr><th className="ep-th">שעה</th><th className="ep-th">משתמש</th><th className="ep-th">פעולה</th><th className="ep-th">פרטים</th></tr></thead>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{tt('יומן ביקורת')}</div><h3 className="ep-card-title">{tt('פעילות היום במערכת')} · 247 {tt('אירוע')}</h3></div><div className="row"><button className="ep-btn ep-btn-ghost ep-btn-sm"><I.filter width={12} height={12}/>{tt('סינון')}</button><button className="ep-btn ep-btn-ghost ep-btn-sm"><I.download width={12} height={12}/>{tt('ייצוא')}</button></div></div>
+      <table className="ep-table"><thead><tr><th className="ep-th">{tt('שעה')}</th><th className="ep-th">{tt('משתמש')}</th><th className="ep-th">{tt('פעולה')}</th><th className="ep-th">{tt('פרטים')}</th></tr></thead>
         <tbody>{events.map((e,i)=>(<tr key={i}><td className="ep-mono">{e.t}</td><td>{e.u}</td><td><span className="ep-tag" style={{background:colors[e.k]+'18',color:colors[e.k]}}>{e.a}</span></td><td className="ep-muted" style={{fontSize:12.5}}>{e.d}</td></tr>))}</tbody>
       </table>
     </div>
@@ -600,6 +631,8 @@ function Toggle({ defaultChecked }) {
 // ── Users Management ─────────────────────────────────────────────
 function UsersPage() {
   const d=window.eprData; const I=window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [tab,setTab]=asS('active'); const [q,setQ]=asS('');
   const [hidden, setHidden] = asS(()=> {
     try { return JSON.parse(localStorage.getItem('epr-users-hidden')||'{}'); } catch(_) { return {}; }
@@ -610,18 +643,18 @@ function UsersPage() {
   };
   const approve = (u) => {
     persistHidden({...hidden, [u.email]:'approved'});
-    window.eprToast && window.eprToast(`${u.name} אושר/ה — נשלחה הזמנה ל-${u.email}`, 'success');
+    window.eprToast && window.eprToast(`${u.name} — ${t('אושר/ה — נשלחה הזמנה ל-')}${u.email}`, 'success');
   };
   const reject = async (u) => {
     const ok = window.eprConfirm
-      ? await window.eprConfirm({ title:'דחיית בקשת הצטרפות', message:`בקשת ההצטרפות של ${u.name} (${u.email}) תידחה. ניתן לשלוח דחייה חדשה בכל עת.`, danger:true, confirmText:'דחה בקשה' })
-      : window.confirm(`לדחות את הבקשה של ${u.name}?`);
+      ? await window.eprConfirm({ title:t('דחיית בקשת הצטרפות'), message:`${t('בקשת ההצטרפות של ')}${u.name} (${u.email})`, danger:true, confirmText:t('דחה') })
+      : window.confirm(`${t('דחיית בקשת הצטרפות')}: ${u.name}?`);
     if (!ok) return;
     persistHidden({...hidden, [u.email]:'rejected'});
-    window.eprToast && window.eprToast(`הבקשה של ${u.name} נדחתה`, 'danger');
+    window.eprToast && window.eprToast(`${u.name} — ${t('נדחתה')}`, 'danger');
   };
   const editUser = (u) => {
-    window.eprToast && window.eprToast(`עריכת המשתמש "${u.name}" נפתחה`, 'info');
+    window.eprToast && window.eprToast(`${t('עריכת המשתמש')} "${u.name}"`, 'info');
   };
   const visible = (u) => !hidden[u.email];
   const list = tab==='pending'
@@ -629,19 +662,19 @@ function UsersPage() {
     : d.users.filter(u=>u.active && visible(u));
   const filtered = q ? list.filter(u=>u.name.includes(q)||u.email.includes(q)) : list;
   return (<>
-    <PageHeader title="ניהול משתמשים" icon="users" subtitle={`${d.users.filter(u=>u.active).length} פעילים · ${d.users.filter(u=>!u.active).length} ממתינים לאישור`} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>ייצוא</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'user'}}))}><I.plus width={14} height={14}/>משתמש חדש</button></>}/>
+    <PageHeader title={t('ניהול משתמשים')} icon="users" subtitle={`${d.users.filter(u=>u.active).length} ${t('פעילים')} · ${d.users.filter(u=>!u.active).length} ${t('ממתינים לאישור')}`} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('ייצוא')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'user'}}))}><I.plus width={14} height={14}/>{t('משתמש חדש')}</button></>}/>
     <div className="row">
       <div className="ep-tabs">
-        <button className={tab==='active'?'active':''} onClick={()=>setTab('active')}>פעילים ({d.users.filter(u=>u.active).length})</button>
-        <button className={tab==='pending'?'active':''} onClick={()=>setTab('pending')}>ממתינים ({d.users.filter(u=>!u.active).length})</button>
+        <button className={tab==='active'?'active':''} onClick={()=>setTab('active')}>{t('פעילים')} ({d.users.filter(u=>u.active).length})</button>
+        <button className={tab==='pending'?'active':''} onClick={()=>setTab('pending')}>{t('ממתינים')} ({d.users.filter(u=>!u.active).length})</button>
       </div>
-      <div className="end"><div className="ep-input-wrap"><I.search width={14} height={14}/><input placeholder="חיפוש משתמש…" value={q} onChange={e=>setQ(e.target.value)}/></div></div>
+      <div className="end"><div className="ep-input-wrap"><I.search width={14} height={14}/><input placeholder={t('חיפוש…')} value={q} onChange={e=>setQ(e.target.value)}/></div></div>
     </div>
     <section className="ep-card">
       {filtered.length===0 ? (
-        <window.EmptyState icon="users" title={tab==='pending'?'אין משתמשים שממתינים לאישור':'לא נמצאו משתמשים'} hint={q?`לא נמצאו תוצאות עבור "${q}"`:'הכל בסדר כאן'} action={q&&<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>setQ('')} data-toast="off">נקה חיפוש</button>}/>
+        <window.EmptyState icon="users" title={tab==='pending'?t('אין משתמשים שממתינים לאישור'):t('לא נמצאו משתמשים')} hint={q?`${t('לא נמצאו תוצאות')} · "${q}"`:t('הכל בסדר כאן')} action={q&&<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>setQ('')} data-toast="off">{t('נקה חיפוש')}</button>}/>
       ) : (
-      <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">שם</th><th className="ep-th">תפקיד</th><th className="ep-th">מחלקה</th><th className="ep-th">אימייל</th><th className="ep-th">כניסה אחרונה</th><th className="ep-th">פניות</th><th className="ep-th">SLA</th><th className="ep-th">סטטוס</th><th className="ep-th"></th></tr></thead><tbody>
+      <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">{t('שם')}</th><th className="ep-th">{t('תפקיד')}</th><th className="ep-th">{t('מחלקה')}</th><th className="ep-th">{t('אימייל')}</th><th className="ep-th">{t('כניסה אחרונה')}</th><th className="ep-th">{t('פניות')}</th><th className="ep-th">SLA</th><th className="ep-th">{t('סטטוס')}</th><th className="ep-th"></th></tr></thead><tbody>
         {filtered.map(u=>(
           <tr key={u.email} className="ep-row">
             <td><div style={{display:'flex',alignItems:'center',gap:10}}><div className="ep-avatar" style={{width:30,height:30,fontSize:11}}>{u.avatar}</div><div><b>{u.name}</b></div></div></td>
@@ -651,8 +684,8 @@ function UsersPage() {
             <td className="ep-muted">{u.last}</td>
             <td><b>{u.handled}</b></td>
             <td>{u.sla>0?<span className={`ep-dept-sla ${u.sla>=92?'good':'ok'}`}>{u.sla}%</span>:<span className="ep-muted">—</span>}</td>
-            <td>{u.active?<span className="ep-tag green">פעיל</span>:<span className="ep-tag amber">ממתין</span>}</td>
-            <td className="end">{u.active?<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>editUser(u)} data-toast="off">ערוך</button>:<><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>approve(u)} data-toast="off">אשר</button><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>reject(u)} data-toast="off">דחה</button></>}</td>
+            <td>{u.active?<span className="ep-tag green">{t('פעיל')}</span>:<span className="ep-tag amber">{t('ממתין')}</span>}</td>
+            <td className="end">{u.active?<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>editUser(u)} data-toast="off">{t('ערוך')}</button>:<><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>approve(u)} data-toast="off">{t('אשר')}</button><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>reject(u)} data-toast="off">{t('דחה')}</button></>}</td>
           </tr>
         ))}
       </tbody></table></div>
@@ -664,6 +697,8 @@ function UsersPage() {
 // ── Saved Reports / My Reports ────────────────────────────────
 function SavedReportsPage() {
   const I=window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const reports=[
     {n:'דוח SLA שבועי לפי מחלקה',cat:'ביצועים',owner:'מיכל כהן',shared:8,run:482,upd:'אתמול'},
     {n:'פניות פתוחות מעל 5 ימים',cat:'תפעול',owner:'נועה לביא',shared:5,run:294,upd:'לפני 3 ימים'},
@@ -676,18 +711,18 @@ function SavedReportsPage() {
     {n:'אסקלציות פעילות',cat:'SLA',owner:'מיכל כהן',shared:9,run:218,upd:'היום'},
   ];
   return (<>
-    <PageHeader title="דוחות שמורים" icon="chart" subtitle="ספריית דוחות מוכנים שמשותפים על פני המערכת" actions={<><button className="ep-btn ep-btn-ghost"><I.filter width={14} height={14}/>קטגוריה</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))}><I.plus width={14} height={14}/>דוח חדש</button></>}/>
+    <PageHeader title={t('דוחות שמורים')} icon="chart" subtitle={t('ספריית דוחות מוכנים שמשותפים על פני המערכת')} actions={<><button className="ep-btn ep-btn-ghost"><I.filter width={14} height={14}/>{t('קטגוריה')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))}><I.plus width={14} height={14}/>{t('דוח חדש')}</button></>}/>
     <section className="ep-card">
-      <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">שם הדוח</th><th className="ep-th">קטגוריה</th><th className="ep-th">בעלים</th><th className="ep-th">משותף ל-</th><th className="ep-th">הופעל (חודש)</th><th className="ep-th">עודכן</th><th className="ep-th"></th></tr></thead><tbody>
+      <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">{t('שם הדוח')}</th><th className="ep-th">{t('קטגוריה')}</th><th className="ep-th">{t('בעלים')}</th><th className="ep-th">{t('משותף ל-')}</th><th className="ep-th">{t('הופעל (חודש)')}</th><th className="ep-th">{t('עודכן')}</th><th className="ep-th"></th></tr></thead><tbody>
         {reports.map(r=>(
           <tr key={r.n} className="ep-row">
             <td><div style={{display:'flex',alignItems:'center',gap:10}}><div className="ep-feed-ic ic-report" style={{width:28,height:28}}><I.chart width={13} height={13}/></div><b>{r.n}</b></div></td>
             <td><span className="ep-tag">{r.cat}</span></td>
             <td>{r.owner}</td>
-            <td>{r.shared} משתמשים</td>
+            <td>{r.shared} {t('משתמשים')}</td>
             <td><b>{r.run}</b></td>
             <td className="ep-muted">{r.upd}</td>
-            <td className="end"><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`הדוח "${r.n}" הופעל — תוצאות יישלחו במייל`, 'success')} data-toast="off">הפעל</button><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))} data-toast="off">ערוך</button></td>
+            <td className="end"><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`"${r.n}" — ${t('הופעל — תוצאות יישלחו במייל')}`, 'success')} data-toast="off">{t('הפעל')}</button><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))} data-toast="off">{t('ערוך')}</button></td>
           </tr>
         ))}
       </tbody></table></div>
@@ -697,6 +732,8 @@ function SavedReportsPage() {
 
 function MyReportsPage() {
   const I=window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const reports=[
     {n:'הפניות שלי השבוע',type:'אישי',run:42,sched:'יומי 08:00',upd:'היום'},
     {n:'התראות SLA פתוחות',type:'התראה',run:128,sched:'בזמן אמת',upd:'לפני שעה'},
@@ -705,13 +742,13 @@ function MyReportsPage() {
     {n:'פניות חורגות בצוות שלי',type:'אישי',run:84,sched:'יומי 16:00',upd:'היום'},
   ];
   return (<>
-    <PageHeader title="הדוחות שלי" icon="chart" subtitle="דוחות אישיים, תזמונים והתראות שיצרת" actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>ייצוא</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))}><I.plus width={14} height={14}/>דוח חדש</button></>}/>
+    <PageHeader title={t('הדוחות שלי')} icon="chart" subtitle={t('דוחות אישיים, תזמונים והתראות שיצרת')} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('ייצוא')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))}><I.plus width={14} height={14}/>{t('דוח חדש')}</button></>}/>
     <div className="ep-kpis">
-      {[['דוחות פעילים','12','+3'],['מתוזמנים','5','+1'],['התראות פעילות','8','-1'],['הפעלות החודש','278','+42']].map(([k,v,dlt],i)=>(<div key={i} className="ep-kpi"><div className="ep-kpi-head"><span className="ep-kpi-lbl">{k}</span><span className={`ep-delta ${dlt.startsWith('-')?'dn':'up'}`}>{dlt}</span></div><div className="ep-kpi-val">{v}</div></div>))}
+      {[['דוחות פעילים','12','+3'],['מתוזמנים','5','+1'],['התראות פעילות','8','-1'],['הפעלות החודש','278','+42']].map(([k,v,dlt],i)=>(<div key={i} className="ep-kpi"><div className="ep-kpi-head"><span className="ep-kpi-lbl">{t(k)}</span><span className={`ep-delta ${dlt.startsWith('-')?'dn':'up'}`}>{dlt}</span></div><div className="ep-kpi-val">{v}</div></div>))}
     </div>
     <section className="ep-card">
-      <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">שם</th><th className="ep-th">סוג</th><th className="ep-th">תזמון</th><th className="ep-th">הפעלות</th><th className="ep-th">עודכן</th><th className="ep-th"></th></tr></thead><tbody>
-        {reports.map(r=>(<tr key={r.n} className="ep-row"><td><b>{r.n}</b></td><td><span className={`ep-tag ${r.type==='התראה'?'amber':r.type==='מתוזמן'?'blue':'slate'}`}>{r.type}</span></td><td>{r.sched}</td><td><b>{r.run}</b></td><td className="ep-muted">{r.upd}</td><td className="end"><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`הדוח "${r.n}" הופעל`, 'success')} data-toast="off">הפעל</button></td></tr>))}
+      <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">{t('שם')}</th><th className="ep-th">{t('סוג')}</th><th className="ep-th">{t('תזמון')}</th><th className="ep-th">{t('הפעלות')}</th><th className="ep-th">{t('עודכן')}</th><th className="ep-th"></th></tr></thead><tbody>
+        {reports.map(r=>(<tr key={r.n} className="ep-row"><td><b>{r.n}</b></td><td><span className={`ep-tag ${r.type==='התראה'?'amber':r.type==='מתוזמן'?'blue':'slate'}`}>{t(r.type)}</span></td><td>{r.sched}</td><td><b>{r.run}</b></td><td className="ep-muted">{r.upd}</td><td className="end"><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`"${r.n}" — ${t('הופעל')}`, 'success')} data-toast="off">{t('הפעל')}</button></td></tr>))}
       </tbody></table></div>
     </section>
   </>);
@@ -720,6 +757,8 @@ function MyReportsPage() {
 // ── Reset Password ─────────────────────────────────────────────
 function ResetPasswordPage({ goPage }) {
   const I=window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [step,setStep]=asS('email');
   return (
     <div className="ep-login" style={{gridTemplateColumns:'1fr'}}>
@@ -727,15 +766,15 @@ function ResetPasswordPage({ goPage }) {
         <div className="ep-login-box" style={{margin:'0 auto'}}>
           <div className="ep-logo" style={{marginBottom:8}}>E</div>
           {step==='email' && (<>
-            <div><div style={{fontSize:11,fontWeight:700,color:'var(--accent)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>איפוס סיסמה</div><h1>שכחת את הסיסמה?</h1><p style={{color:'var(--muted)',margin:'6px 0 0'}}>הזינו את כתובת המייל ונשלח אליכם קישור לאיפוס</p></div>
-            <div className="ep-field"><label>אימייל</label><input type="email" placeholder="name@city.gov.il" defaultValue="michal@epr-muni.co.il"/></div>
-            <button className="ep-btn ep-btn-primary" style={{padding:'12px 16px',justifyContent:'center'}} onClick={()=>setStep('sent')}>שלח קישור איפוס</button>
-            <div style={{textAlign:'center',fontSize:13}}><a href="#" onClick={(e)=>{e.preventDefault();goPage('login')}} style={{color:'var(--accent)',fontWeight:500}}>← חזרה להתחברות</a></div>
+            <div><div style={{fontSize:11,fontWeight:700,color:'var(--accent)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{t('איפוס סיסמה')}</div><h1>{t('שכחת את הסיסמה?')}</h1><p style={{color:'var(--muted)',margin:'6px 0 0'}}>{t('הזינו את כתובת המייל ונשלח אליכם קישור לאיפוס')}</p></div>
+            <div className="ep-field"><label>{t('אימייל')}</label><input type="email" placeholder="name@city.gov.il" defaultValue="michal@epr-muni.co.il"/></div>
+            <button className="ep-btn ep-btn-primary" style={{padding:'12px 16px',justifyContent:'center'}} onClick={()=>setStep('sent')}>{t('שלח קישור איפוס')}</button>
+            <div style={{textAlign:'center',fontSize:13}}><a href="#" onClick={(e)=>{e.preventDefault();goPage('login')}} style={{color:'var(--accent)',fontWeight:500}}>{t('← חזור להתחברות')}</a></div>
           </>)}
           {step==='sent' && (<>
-            <div style={{textAlign:'center'}}><div className="ep-feed-ic ic-check" style={{width:56,height:56,margin:'0 auto 12px'}}><I.check width={26} height={26}/></div><h1>בדוק את תיבת הדואר שלך</h1><p style={{color:'var(--muted)',margin:'6px 0 0'}}>שלחנו קישור איפוס ל-michal@epr-muni.co.il. הקישור תקף לשעה.</p></div>
-            <button className="ep-btn ep-btn-ghost" style={{padding:'12px 16px',justifyContent:'center'}} onClick={()=>setStep('email')}>שלח שוב</button>
-            <button className="ep-btn ep-btn-primary" style={{padding:'12px 16px',justifyContent:'center'}} onClick={()=>goPage('login')}>חזור להתחברות</button>
+            <div style={{textAlign:'center'}}><div className="ep-feed-ic ic-check" style={{width:56,height:56,margin:'0 auto 12px'}}><I.check width={26} height={26}/></div><h1>{t('בדוק את תיבת הדואר שלך')}</h1><p style={{color:'var(--muted)',margin:'6px 0 0'}}>{t('שלחנו קישור איפוס ל')} michal@epr-muni.co.il. {t('הקישור תקף לשעה.')}</p></div>
+            <button className="ep-btn ep-btn-ghost" style={{padding:'12px 16px',justifyContent:'center'}} onClick={()=>setStep('email')}>{t('שלח שוב')}</button>
+            <button className="ep-btn ep-btn-primary" style={{padding:'12px 16px',justifyContent:'center'}} onClick={()=>goPage('login')}>{t('חזור להתחברות')}</button>
           </>)}
         </div>
       </div>
