@@ -157,7 +157,7 @@ function GeneralSettings() {
         <div className="ep-field"><label>אימייל ראשי</label><input value={g.email} onChange={e=>set('email',e.target.value)} style={{direction:'ltr'}} aria-invalid={!!emailErr}/><FieldError>{emailErr}</FieldError></div>
         <div className="ep-field full"><label>כתובת</label><input value={g.address} onChange={e=>set('address',e.target.value)}/></div>
         <div className="ep-field"><label>אזור זמן</label><select value={g.tz} onChange={e=>set('tz',e.target.value)}><option>Asia/Jerusalem</option><option>UTC</option></select></div>
-        <div className="ep-field"><label>שפת ברירת מחדל</label><select value={g.lang} onChange={e=>set('lang',e.target.value)}><option value="he">עברית</option><option value="en">English</option><option value="ar">العربية</option></select></div>
+        <div className="ep-field"><label>שפת ברירת מחדל</label><select value={g.lang} onChange={e=>set('lang',e.target.value)}><option value="he">עברית</option><option value="en">English</option><option value="ar">العربية</option><option value="ru">Русский</option></select></div>
       </div>
     </div>
     <div className="ep-card">
