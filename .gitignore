@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+.DS_Store
+.env
+.env.local
+
+# Build
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
