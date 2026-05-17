@@ -49,17 +49,23 @@ const NAV_GROUPS = [
 ];
 
 function useEprBranding() {
-  const [b, setB] = vS(()=>{
+  const readBranding = () => {
     try {
       const raw = localStorage.getItem('epr-settings-v1');
       const parsed = raw ? JSON.parse(raw) : {};
       return parsed.branding || {};
     } catch(_) { return {}; }
-  });
+  };
+  const [b, setB] = vS(readBranding);
   vE(()=>{
-    const onUpdate = (e)=> setB(e.detail || {});
+    const onUpdate = (e)=> setB(e.detail || readBranding());
+    const onStorage = (e)=> { if (!e || e.key === 'epr-settings-v1') setB(readBranding()); };
     window.addEventListener('epr-branding-updated', onUpdate);
-    return ()=> window.removeEventListener('epr-branding-updated', onUpdate);
+    window.addEventListener('storage', onStorage);
+    return ()=> {
+      window.removeEventListener('epr-branding-updated', onUpdate);
+      window.removeEventListener('storage', onStorage);
+    };
   },[]);
   return b;
 }
@@ -216,7 +222,7 @@ function Sidebar({ page, setPage }) {
               ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
               : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>}
           </button>
-          <button className="ep-icon-btn" title="התנתקות" style={{width:30,height:30}}><I.logout width={16} height={16}/></button>
+          <button className="ep-icon-btn" title={t('התנתקות')} aria-label={t('התנתקות')} style={{width:30,height:30}}><I.logout width={16} height={16} aria-hidden="true"/></button>
         </div>
       </div>
     </aside>

@@ -286,6 +286,8 @@ function AISearch() {
 
   if (!open) return null;
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
 
   const kindLabel = { request:'פנייה', resident:'תושב', team:'צוות', campaign:'קמפיין', page:'מסך', action:'פעולה' };
   const kindIc = { request:'inbox', resident:'users', team:'chart', campaign:'msg', page:'home', action:'plus' };
@@ -320,7 +322,7 @@ function AISearch() {
               value={query}
               onChange={e=>setQuery(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="חפשו פנייה, תושב, מסך, פעולה..."
+              placeholder={t('חפשו פנייה, תושב, מסך, פעולה...')}
               autoComplete="off"
             />
             <button type="button" className="ai-switch" onClick={()=>setMode('ai')} data-toast="off">
@@ -336,7 +338,7 @@ function AISearch() {
               type="text"
               value={query}
               onChange={e=>setQuery(e.target.value)}
-              placeholder="שאל את EPR AI על כל דבר במערכת..."
+              placeholder={t('שאל את EPR AI על כל דבר במערכת...')}
               autoComplete="off"
             />
             <button type="submit" className="ai-send" disabled={!query.trim()||thinking} data-toast="off">

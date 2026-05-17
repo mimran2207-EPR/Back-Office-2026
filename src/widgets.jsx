@@ -71,7 +71,7 @@ function Top5List({ data }) {
   return (
     <ol className="wg-top5">
       {data.slice(0, 5).map((d, i) => (
-        <li key={i}>
+        <li key={d.label || i}>
           <span className="wg-top5-rank" data-rank={i + 1}>{i + 1}</span>
           <div className="wg-top5-body">
             <div className="wg-top5-row"><span className="wg-top5-lbl">{d.label}</span><b>{d.v}</b></div>
@@ -87,6 +87,7 @@ function Top5List({ data }) {
 function ChartWidget({ title, subtitle, data, primary = 'bars', availableTypes = ['bars', 'donut', 'top5'], centerValue, centerLabel, format, donutCenter, onOpen }) {
   const [type, setType] = wS(primary);
   const I = window.EprIcon;
+  const t = window.eprT || ((s)=>s);
 
   const renderChart = () => {
     if (type === 'donut') {
@@ -117,10 +118,10 @@ function ChartWidget({ title, subtitle, data, primary = 'bars', availableTypes =
           {subtitle && <p className="wg-sub">{subtitle}</p>}
         </div>
         <div className="row" style={{gap:4}}>
-          {onOpen && <button className="wg-edit" onClick={onOpen} aria-label="פתח" title="פתח תצוגה מלאה">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          {onOpen && <button className="wg-edit" onClick={onOpen} aria-label={t('פתח תצוגה מלאה')} title={t('פתח תצוגה מלאה')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
           </button>}
-          <button className="wg-edit" aria-label="ערוך ווידג׳ט" title="ערוך ווידג׳ט">
+          <button className="wg-edit" aria-label={t('ערוך ווידג׳ט')} title={t('ערוך ווידג׳ט')}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           </button>
         </div>

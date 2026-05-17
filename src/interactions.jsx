@@ -75,7 +75,7 @@ function ConfirmHost() {
             </div>
             <h3 id="ep-confirm-title" style={{margin:0}}>{opts.title}</h3>
           </div>
-          <button className="ep-icon-btn" onClick={()=>done(false)} data-toast="off" aria-label="סגור"><I.close/></button>
+          <button className="ep-icon-btn" onClick={()=>done(false)} data-toast="off" aria-label={(window.eprT||((s)=>s))('סגור')}><I.close aria-hidden="true"/></button>
         </header>
         <div className="ep-modal-body" style={{paddingBlock:8}}>
           <p style={{margin:0,fontSize:14,lineHeight:1.55,color:'var(--text)'}}>{opts.message}</p>
@@ -139,7 +139,7 @@ function ButtonFeedback() {
       // — we'll always fire; only skip toast for nav classes.
       const cls = el.className || '';
       // sidebar nav, top tabs, sub-tabs handle their own routing → no toast
-      if(/ep-nav-link|ep-tabs|ep-pill|ep-side-tabs|ep-stat|ep-kpi|ep-dot/.test(cls)) return false;
+      if(/ep-nav-link|ep-tabs|ep-pill|ep-side-tabs|ep-stat|ep-kpi|ep-dot|ep-toggle|ep-theme-toggle|ep-mobile-menu|ep-a11y-fab|ep-a11y-btn|ep-skip|rd-step|rd-tab|rd-attach-tab|rd-bcrumb-link|rd-app-act|wg-tab|wg-edit|ep-modal-step/.test(cls)) return false;
       return true;
     }
     function onClick(e){
@@ -330,9 +330,9 @@ function FormBuilderModal() {
   const typeIcons = { text:'doc', textarea:'note', number:'pay', date:'calendar', select:'chevD', file:'paperclip', checkbox:'check' };
   return (
     <div className="ep-modal-overlay" onMouseDown={close}>
-      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="ep-form-builder-title">
         <header className="ep-modal-head">
-          <div><div className="ep-card-eb">{t('טופס חדש')}</div><h3>{step===1?t('פרטי טופס'):step===2?t('בניית שדות'):t('סקירה ופרסום')}</h3></div>
+          <div><div className="ep-card-eb">{t('טופס חדש')}</div><h3 id="ep-form-builder-title">{step===1?t('פרטי טופס'):step===2?t('בניית שדות'):t('סקירה ופרסום')}</h3></div>
           <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}><I.close/></button>
         </header>
         <div className="ep-modal-stepper">
@@ -378,7 +378,7 @@ function FormBuilderModal() {
                   <label style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,color:'var(--muted)'}}>
                     <input type="checkbox" checked={f.required} onChange={e=>updateField(f.id,'required',e.target.checked)}/>חובה
                   </label>
-                  <button className="ep-icon-btn" style={{width:26,height:26}} data-toast="off" onClick={()=>removeField(f.id)} aria-label="הסר"><I.close width={12} height={12}/></button>
+                  <button className="ep-icon-btn" style={{width:26,height:26}} data-toast="off" onClick={()=>removeField(f.id)} aria-label={t('הסר')}><I.close width={12} height={12} aria-hidden="true"/></button>
                 </div>
               ))}
             </div>
@@ -423,7 +423,7 @@ function FormBuilderModal() {
                   </select>
                 </div>
                 <div className="ep-field"><label>{api.auth==='basic'?'שם משתמש':api.auth==='oauth'?'Client ID':'Token / Key'}</label>
-                  <input value={api.token} onChange={e=>setApi({...api,token:e.target.value})} dir="ltr" placeholder="הזן זיהוי..." type="password"/>
+                  <input value={api.token} onChange={e=>setApi({...api,token:e.target.value})} dir="ltr" placeholder={t('הזן זיהוי...')} type="password"/>
                 </div>
                 {(api.auth==='basic'||api.auth==='oauth') && (
                   <div className="ep-field"><label>{api.auth==='basic'?'סיסמה':'Client Secret'}</label>
@@ -540,9 +540,9 @@ function ReportBuilderModal() {
   const charts = [['bars','עמודות','chart'],['donut','דונאט','filter'],['line','קו','up'],['table','טבלה','doc']];
   return (
     <div className="ep-modal-overlay" onMouseDown={close}>
-      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="ep-report-builder-title">
         <header className="ep-modal-head">
-          <div><div className="ep-card-eb">{t('דוח חדש')}</div><h3>{step===1?t('פרטי דוח'):step===2?t('בניית הדוח'):t('תצוגה ותזמון')}</h3></div>
+          <div><div className="ep-card-eb">{t('דוח חדש')}</div><h3 id="ep-report-builder-title">{step===1?t('פרטי דוח'):step===2?t('בניית הדוח'):t('תצוגה ותזמון')}</h3></div>
           <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}><I.close/></button>
         </header>
         <div className="ep-modal-stepper">
@@ -747,9 +747,9 @@ function EntityCreateModal() {
 
   return (
     <div className="ep-modal-overlay" onMouseDown={close}>
-      <div className="ep-modal" style={{maxWidth:520}} onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="ep-modal" style={{maxWidth:520}} onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="ep-entity-title">
         <header className="ep-modal-head">
-          <div><div className="ep-card-eb">{t('יצירה חדשה')}</div><h3>{t(config.schema.title)}</h3></div>
+          <div><div className="ep-card-eb">{t('יצירה חדשה')}</div><h3 id="ep-entity-title">{t(config.schema.title)}</h3></div>
           <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}><I.close/></button>
         </header>
         <div className="ep-modal-body">
