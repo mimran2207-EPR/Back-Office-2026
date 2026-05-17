@@ -145,18 +145,6 @@ const eprData = {
     { name:'יואב רוזן',       avatar:'יר', role:'רכז שטח',      dept:'תברואה',       email:'yoav.r@new.gov.il',     last:'-',         handled:0,   sla:0,  active:false },
     { name:'דנה כץ',          avatar:'דכ', role:'מנהל מחלקה',   dept:'חינוך',        email:'dana.k@new.gov.il',     last:'-',         handled:0,   sla:0,  active:false },
   ],
-  settingsNav: [
-    { id: 'departments',  label: 'מחלקות',       icon: 'building' },
-    { id: 'teams',        label: 'צוותים',         icon: 'users' },
-    { id: 'forms',        label: 'טפסים',         icon: 'doc' },
-    { id: 'sla',          label: 'SLA',             icon: 'clock' },
-    { id: 'approval',     label: 'תהליכי אישור',   icon: 'check' },
-    { id: 'delegations',  label: 'האצלת סמכויות', icon: 'users' },
-    { id: 'escalations',  label: 'אסקלציות',       icon: 'alert' },
-    { id: 'audit',        label: 'יומן ביקורת',     icon: 'doc' },
-    { id: 'admin',        label: 'ניהול משתמשים', icon: 'shield' },
-    { id: 'calendar',     label: 'לוח עסקי',        icon: 'calendar' },
-  ],
 };
 window.eprData = eprData;
 

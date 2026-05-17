@@ -67,19 +67,24 @@ function DashboardPage({ openRequest, goPage }) {
         </tbody></table></div>
       </section>
 
+      {(()=>{
+        const deptMax = Math.max(...d.departments.map(x=>x.open), 1);
+        return (
       <section className="ep-card">
         <div className="ep-card-head"><div><div className="ep-card-eb">{t('עומס לפי מחלקה')}</div><h3 className="ep-card-title">{t('פניות פתוחות ו-SLA')}</h3></div></div>
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {d.departments.map(dep => { const max=Math.max(...d.departments.map(x=>x.open)); return (
+          {d.departments.map(dep => (
             <div key={dep.name} className="ep-dept">
               <div>{dep.name}</div>
-              <div className="ep-dept-bar"><div style={{width:`${(dep.open/max)*100}%`,background:dep.color}}/></div>
+              <div className="ep-dept-bar"><div style={{width:`${(dep.open/deptMax)*100}%`,background:dep.color}}/></div>
               <div className="ep-dept-val">{dep.open}</div>
               <div className={`ep-dept-sla ${dep.sla>=93?'good':dep.sla>=88?'ok':'warn'}`}>{dep.sla}%</div>
             </div>
-          )})}
+          ))}
         </div>
       </section>
+        );
+      })()}
     </div>
 
     <div className="ep-row2">
@@ -343,6 +348,10 @@ function LoginPage({ onLogin }) {
   if (window.useEprLang) window.useEprLang();
   const t = window.eprT || ((s)=>s);
   const brandName = brand.appName ? brand.appName.split(' - ')[0].split(' – ')[0] : 'EPR Digital';
+  const [email, setEmail] = pgS('michal@epr-muni.co.il');
+  const [password, setPassword] = pgS('');
+  const [remember, setRemember] = pgS(true);
+  const onSubmit = (e) => { e.preventDefault(); onLogin && onLogin({email, password, remember}); };
   return (
     <div className="ep-login">
       <div className="ep-login-hero">
@@ -351,16 +360,29 @@ function LoginPage({ onLogin }) {
         <div style={{zIndex:1}}><h1 style={{fontSize:32,fontWeight:700,margin:'0 0 12px',letterSpacing:'-.02em'}}>{t('ניהול מוקד השירות של העיר במקום אחד.')}</h1><p style={{opacity:.9,fontSize:15,maxWidth:'45ch',lineHeight:1.6}}>{t('ריכוז פניות, מעקב SLA, ניהול תושבים, דיוורים וצוותים — בזרימת עבודה מודרנית שמכבדת את הזמן שלכם.')}</p></div>
         <div style={{zIndex:1,fontSize:12,opacity:.7}}>© 2026 EPR Systems Israel · {t('גרסה')} 4.2.1</div>
       </div>
-      <div className="ep-login-form">
+      <form className="ep-login-form" onSubmit={onSubmit} noValidate>
         <div className="ep-login-box">
           <div><div style={{fontSize:11,fontWeight:700,color:'var(--accent)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{t('כניסה למערכת')}</div><h1>{t('ברוכים הבאים חזרה')}</h1><p style={{color:'var(--muted)',margin:'6px 0 0'}}>{t('הזינו את פרטי הכניסה שלכם כדי להתחיל')}</p></div>
-          <div className="ep-field"><label>{t('אימייל')}</label><input type="email" placeholder="name@city.gov.il" defaultValue="michal@epr-muni.co.il"/></div>
-          <div className="ep-field"><label>{t('סיסמה')}</label><input type="password" placeholder="••••••••" defaultValue="••••••••"/></div>
-          <div className="row"><label style={{display:'flex',alignItems:'center',gap:6,fontSize:12.5,color:'var(--muted)'}}><input type="checkbox" defaultChecked/>{t('זכרו אותי')}</label><a href="#" className="end" style={{fontSize:12.5,color:'var(--accent)',fontWeight:500}}>{t('שכחתי סיסמה')}</a></div>
-          <button className="ep-btn ep-btn-primary" style={{padding:'12px 16px',justifyContent:'center',fontSize:14}} onClick={onLogin}>{t('כניסה ←')}</button>
+          <div className="ep-field">
+            <label htmlFor="ep-login-email">{t('אימייל')}</label>
+            <input id="ep-login-email" name="email" type="email" autoComplete="username"
+              required value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@city.gov.il"/>
+          </div>
+          <div className="ep-field">
+            <label htmlFor="ep-login-password">{t('סיסמה')}</label>
+            <input id="ep-login-password" name="password" type="password" autoComplete="current-password"
+              required value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••"/>
+          </div>
+          <div className="row">
+            <label style={{display:'flex',alignItems:'center',gap:6,fontSize:12.5,color:'var(--muted)'}}>
+              <input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)}/>{t('זכרו אותי')}
+            </label>
+            <a href="#reset-password" className="end" style={{fontSize:12.5,color:'var(--accent)',fontWeight:500}}>{t('שכחתי סיסמה')}</a>
+          </div>
+          <button type="submit" className="ep-btn ep-btn-primary" style={{padding:'12px 16px',justifyContent:'center',fontSize:14}} data-toast="off">{t('כניסה ←')}</button>
           <div style={{textAlign:'center',fontSize:12,color:'var(--muted)'}}>{t('אין לכם חשבון?')} <a href="#" style={{color:'var(--accent)',fontWeight:500}}>{t('בקשו גישה')}</a></div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

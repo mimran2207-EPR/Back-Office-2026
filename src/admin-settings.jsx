@@ -182,13 +182,38 @@ function GeneralSettings() {
 function BusinessCalendarSettings() {
   if (window.useEprLang) window.useEprLang();
   const t = window.eprT || ((s)=>s);
-  const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const dayKeys = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const HOURS_KEY = 'epr-hotline-hours-v1';
+  const loadHours = () => {
+    try {
+      const raw = localStorage.getItem(HOURS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch(_) {}
+    return dayKeys.map((d,i)=>({ day:d, active:i!==6, open: i===5?'08:00':'08:30', close: i===5?'13:00':'17:30' }));
+  };
+  const [rows, setRows] = asS(loadHours);
+  const [dirty, setDirty] = asS(false);
+  const update = (i,k,v) => { setRows(prev=>prev.map((r,idx)=>idx===i?{...r,[k]:v}:r)); setDirty(true); };
+  const save = () => {
+    try { localStorage.setItem(HOURS_KEY, JSON.stringify(rows)); } catch(_) {}
+    setDirty(false);
+    window.eprToast && window.eprToast(t('שעות המוקד נשמרו'), 'success');
+  };
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">{t('שעות פעילות')}</div><h3 className="ep-card-title">{t('שעות מוקד שבועיות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(t('שעות המוקד נשמרו'), 'success')} data-toast="off">{t('שמירה')}</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('שעות פעילות')}</div><h3 className="ep-card-title">{t('שעות מוקד שבועיות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty} onClick={save} data-toast="off">{dirty?t('שמירה'):t('נשמר')}</button></div>
       <table className="ep-table">
         <thead><tr><th className="ep-th">{t('יום')}</th><th className="ep-th">{t('פעיל?')}</th><th className="ep-th">{t('פתיחה')}</th><th className="ep-th">{t('סגירה')}</th><th className="ep-th">{t('הפסקה')}</th></tr></thead>
-        <tbody>{days.map((d,i)=>(<tr key={d}><td><b>{t(d)}</b></td><td><Toggle defaultChecked={i!==6}/></td><td><input style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:90}} defaultValue={i===5?'08:00':'08:30'}/></td><td><input style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:90}} defaultValue={i===5?'13:00':'17:30'}/></td><td className="ep-muted" style={{fontSize:12}}>13:00–14:00</td></tr>))}</tbody>
+        <tbody>{rows.map((r,i)=>(<tr key={r.day}>
+          <td><b>{t(r.day)}</b></td>
+          <td>
+            <button type="button" className={`ep-toggle ${r.active?'on':''}`} aria-pressed={r.active} aria-label={`${t(r.day)} — ${r.active?t('פעיל'):t('לא פעיל')}`}
+              onClick={()=>update(i,'active',!r.active)} data-toast="off"><span className="ep-toggle-knob"/></button>
+          </td>
+          <td><input type="time" style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:110}} value={r.open} onChange={e=>update(i,'open',e.target.value)} disabled={!r.active}/></td>
+          <td><input type="time" style={{direction:'ltr',padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,width:110}} value={r.close} onChange={e=>update(i,'close',e.target.value)} disabled={!r.active}/></td>
+          <td className="ep-muted" style={{fontSize:12}}>13:00–14:00</td>
+        </tr>))}</tbody>
       </table>
     </div>
     <div className="ep-card">
@@ -622,10 +647,21 @@ function AuditSettings() {
   </>);
 }
 
-// Toggle component
-function Toggle({ defaultChecked }) {
+// Toggle component (RTL-aware + dark-mode-aware via CSS class)
+function Toggle({ defaultChecked, label }) {
   const [on,setOn]=asS(defaultChecked||false);
-  return <button onClick={()=>setOn(!on)} aria-pressed={on} style={{position:'relative',width:36,height:20,borderRadius:10,border:'1px solid '+(on?'var(--accent)':'var(--border-dark)'),background:on?'var(--accent)':'#fff',cursor:'pointer',flexShrink:0,transition:'all .15s'}}><span style={{position:'absolute',top:1,right:on?1:17,width:16,height:16,borderRadius:'50%',background:'#fff',boxShadow:'0 1px 2px rgba(0,0,0,.2)',transition:'right .15s'}}/></button>;
+  const t = window.eprT || ((s)=>s);
+  return (
+    <button
+      type="button"
+      onClick={()=>setOn(!on)}
+      aria-pressed={on}
+      aria-label={label ? `${t(label)} — ${on?t('פעיל'):t('לא פעיל')}` : undefined}
+      className={`ep-toggle ${on?'on':''}`}
+      data-toast="off">
+      <span className="ep-toggle-knob"/>
+    </button>
+  );
 }
 
 // ── Users Management ─────────────────────────────────────────────

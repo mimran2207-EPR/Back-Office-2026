@@ -104,7 +104,7 @@ function AccessibilityMenu() {
 
     {open && (
       <div ref={panelRef} className="ep-a11y-panel" id="ep-a11y-panel"
-        role="dialog" aria-modal="false" aria-labelledby="ep-a11y-title">
+        role="dialog" aria-modal="true" aria-labelledby="ep-a11y-title">
         <h3 id="ep-a11y-title">
           <span aria-hidden="true">♿︎</span>
           {t('תפריט נגישות')}
@@ -157,11 +157,24 @@ function AccessibilityStatementPage({ goPage }) {
   const I = window.EprIcon;
   const t = window.eprT || ((s)=>s);
   const brand = (window.useEprBranding ? window.useEprBranding() : {}) || {};
-  let general = {};
-  try {
-    const raw = localStorage.getItem('epr-settings-v1');
-    general = (raw ? (JSON.parse(raw).general || {}) : {});
-  } catch(_) {}
+  const readGeneral = () => {
+    try {
+      const raw = localStorage.getItem('epr-settings-v1');
+      return (raw ? (JSON.parse(raw).general || {}) : {});
+    } catch(_) { return {}; }
+  };
+  const [general, setGeneral] = a11yS(readGeneral);
+  a11yE(()=>{
+    const onUpdate = ()=> setGeneral(readGeneral());
+    window.addEventListener('epr-branding-updated', onUpdate);
+    window.addEventListener('epr-lang-updated', onUpdate);
+    window.addEventListener('storage', onUpdate);
+    return ()=> {
+      window.removeEventListener('epr-branding-updated', onUpdate);
+      window.removeEventListener('epr-lang-updated', onUpdate);
+      window.removeEventListener('storage', onUpdate);
+    };
+  }, []);
   const orgName = general.orgName || brand.appName || 'EPR Digital';
   const phone   = general.phone   || '106';
   const email   = general.email   || 'accessibility@city.gov.il';

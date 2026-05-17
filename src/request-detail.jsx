@@ -290,13 +290,15 @@ function RDTopBar({ row, goPage, goBack, chatOpen, onToggleChat, noteCount, canA
 // ─────────────────────────────────────────────────────────────────────────────
 function ApplicantPanel({ row }) {
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const T = window.eprT || ((s)=>s);
   const initials = row.resident.split(' ').filter(Boolean).map(s=>s[0]).slice(0,2).join('');
   const phone = '052-698-1025';
   const email = (row.resident.replace(/\s+/g,'.').toLowerCase() || 'resident') + '@gmail.com';
 
   return (
     <div className="rd-card">
-      <div className="rd-card-stripe" style={{background:'linear-gradient(to left, var(--accent), color-mix(in srgb, var(--accent) 40%, transparent))'}}/>
+      <div className="rd-card-stripe" style={{background:'linear-gradient(to var(--rd-stripe-dir, left), var(--accent), color-mix(in srgb, var(--accent) 40%, transparent))'}}/>
       <div className="rd-card-body">
         <div className="rd-card-head-row"><I.user width={14} height={14}/><span className="rd-card-eb">פרטי פונה</span></div>
 
@@ -309,10 +311,25 @@ function ApplicantPanel({ row }) {
         </div>
 
         <div className="rd-applicant-actions">
-          <button className="rd-app-act mail" title="שלח מייל"><I.mail width={14} height={14}/></button>
-          <button className="rd-app-act wa"   title="וואטסאפ"><I.whatsapp width={14} height={14}/></button>
-          <button className="rd-app-act tel"  title="התקשר"><I.phone width={14} height={14}/></button>
-          <button className="rd-app-act copy" title="העתק"><I.copy width={14} height={14}/></button>
+          <button className="rd-app-act mail" title={T('שלח מייל')} aria-label={T('שלח מייל')} data-toast="off"
+            onClick={()=>{ window.location.href = `mailto:${email}`; }}>
+            <I.mail width={14} height={14} aria-hidden="true"/>
+          </button>
+          <button className="rd-app-act wa" title={T('וואטסאפ')} aria-label={T('וואטסאפ')} data-toast="off"
+            onClick={()=>{ const clean = phone.replace(/\D/g,'').replace(/^0/,'972'); window.open(`https://wa.me/${clean}`, '_blank', 'noopener'); }}>
+            <I.whatsapp width={14} height={14} aria-hidden="true"/>
+          </button>
+          <button className="rd-app-act tel" title={T('התקשר')} aria-label={T('התקשר')} data-toast="off"
+            onClick={()=>{ window.location.href = `tel:${phone.replace(/\s/g,'')}`; }}>
+            <I.phone width={14} height={14} aria-hidden="true"/>
+          </button>
+          <button className="rd-app-act copy" title={T('העתק')} aria-label={T('העתק')} data-toast="off"
+            onClick={async ()=>{
+              try { await navigator.clipboard.writeText(phone); window.eprToast && window.eprToast(T('הועתק ללוח'), 'success'); }
+              catch(_) { window.eprToast && window.eprToast(T('הועתק ללוח'), 'info'); }
+            }}>
+            <I.copy width={14} height={14} aria-hidden="true"/>
+          </button>
         </div>
 
         <div className="rd-kv-list">
@@ -347,7 +364,7 @@ function PropertyPanel({ row }) {
   const I = window.EprIcon;
   return (
     <div className="rd-card">
-      <div className="rd-card-stripe" style={{background:'linear-gradient(to left, #F2B134, color-mix(in srgb, #F2B134 40%, transparent))'}}/>
+      <div className="rd-card-stripe" style={{background:'linear-gradient(to var(--rd-stripe-dir, left), #F2B134, color-mix(in srgb, #F2B134 40%, transparent))'}}/>
       <div className="rd-card-body">
         <div className="rd-card-head-row"><I.map width={14} height={14}/><span className="rd-card-eb">מיקום</span></div>
         <div className="rd-map-stub" aria-hidden="true">
@@ -379,7 +396,7 @@ function Accordion({ icon: Ic, title, badge, defaultOpen, accent='var(--accent)'
   const [open, setOpen] = rdS(!!defaultOpen);
   return (
     <div className="rd-card rd-acc">
-      <div className="rd-card-stripe" style={{background:`linear-gradient(to left, ${accent}, color-mix(in srgb, ${accent} 40%, transparent))`}}/>
+      <div className="rd-card-stripe" style={{background:`linear-gradient(to var(--rd-stripe-dir, left), ${accent}, color-mix(in srgb, ${accent} 40%, transparent))`}}/>
       <button className="rd-acc-trigger" onClick={()=>setOpen(!open)}>
         <div className="row" style={{gap:8}}>
           <Ic width={15} height={15} style={{color:'var(--muted)'}}/>
@@ -429,16 +446,17 @@ function RequestInfoCard({ row }) {
     document.addEventListener('mousedown', onDoc);
     return ()=> document.removeEventListener('mousedown', onDoc);
   }, [assignOpen]);
+  const TT = window.eprT || ((s)=>s);
   const changePriority = (p)=> {
     if (p===priority) return;
     setPriority(p);
     rdSaveOverride(row.id, { priority: p });
-    window.eprToast && window.eprToast(`עדיפות הפנייה ${row.id} שונתה ל"${p}" · נשמר`, p==='דחוף'?'danger':'success');
+    window.eprToast && window.eprToast(`${TT('עדיפות הפנייה')} ${row.id} ${TT('שונתה ל')} "${TT(p)}" ${TT('נשמר (suffix)')}`, p==='דחוף'?'danger':'success');
   };
   const changeClerk = (name)=> {
     setClerk(name); setAssignOpen(false);
     rdSaveOverride(row.id, { clerk: name });
-    window.eprToast && window.eprToast(`הפנייה ${row.id} שובצה ל${name} · נשמר`, 'success');
+    window.eprToast && window.eprToast(`${row.id} ${TT('שובצה ל')} ${name} ${TT('נשמר (suffix)')}`, 'success');
   };
   return (
     <div className="rd-form-grid">
@@ -717,7 +735,7 @@ function NotificationTemplates({ row }) {
   ];
   return (
     <div className="rd-card">
-      <div className="rd-card-stripe" style={{background:'linear-gradient(to left, #2AA7B8, color-mix(in srgb, #2AA7B8 40%, transparent))'}}/>
+      <div className="rd-card-stripe" style={{background:'linear-gradient(to var(--rd-stripe-dir, left), #2AA7B8, color-mix(in srgb, #2AA7B8 40%, transparent))'}}/>
       <div className="rd-card-body">
         <div className="rd-card-head-row"><I.send width={13} height={13}/><span className="rd-card-eb">תבניות התראה</span></div>
         <div className="rd-tpl-list">
@@ -742,6 +760,8 @@ function NotificationTemplates({ row }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function ChatDrawer({ open, onClose, notes, onAdd }) {
   const I = window.EprIcon;
+  if (window.useEprLang) window.useEprLang();
+  const T = window.eprT || ((s)=>s);
   const [msg, setMsg] = rdS('');
   const ref = rdR(null);
   rdE(()=>{ if(open && ref.current) ref.current.scrollTop = ref.current.scrollHeight; }, [open, notes.length]);
@@ -791,7 +811,7 @@ function ChatDrawer({ open, onClose, notes, onAdd }) {
             value={msg}
             onChange={e=>setMsg(e.target.value)}
             onKeyDown={e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } }}
-            placeholder="כתוב הודעה פנימית..."
+            placeholder={T('כתוב הודעה פנימית...')} aria-label={T('כתוב הודעה פנימית...')}
           />
           <button className="rd-chat-send" disabled={!msg.trim()} onClick={send}>
             <I.send width={14} height={14}/>
@@ -806,7 +826,9 @@ function ChatDrawer({ open, onClose, notes, onAdd }) {
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 function RequestDetailPageV3({ row, goPage, goBack }) {
-  if (!row) return <div className="ep-card"><p>לא נבחרה פנייה. <a href="#" onClick={e=>{e.preventDefault();goBack();}}>חזרה</a></p></div>;
+  if (window.useEprLang) window.useEprLang();
+  const T = window.eprT || ((s)=>s);
+  if (!row) return <div className="ep-card"><p>{T('לא נבחרה פנייה.')} <a href="#" onClick={e=>{e.preventDefault();goBack();}}>{T('חזור אחורה')}</a></p></div>;
 
   const [chatOpen, setChatOpen] = rdS(false);
   const [notes, setNotes] = rdS([
@@ -877,22 +899,22 @@ function RequestDetailPageV3({ row, goPage, goBack }) {
 
           {/* Center column: accordions */}
           <div className="rd-col-center">
-            <Accordion icon={window.EprIcon.settings} title="פרטי פנייה" defaultOpen accent="#3BB76E">
+            <Accordion icon={window.EprIcon.settings} title={T('פרטי פנייה')} defaultOpen accent="#3BB76E">
               <RequestInfoCard row={row}/>
             </Accordion>
-            <Accordion icon={window.EprIcon.mail} title="יצירת קשר" badge="3" accent="#2E6BE6">
+            <Accordion icon={window.EprIcon.mail} title={T('יצירת קשר')} badge="3" accent="#2E6BE6">
               <EmailThread row={row}/>
             </Accordion>
-            <Accordion icon={window.EprIcon.paperclip} title="קבצים" badge={files.length} defaultOpen accent="#7B5BD6">
+            <Accordion icon={window.EprIcon.paperclip} title={T('קבצים')} badge={files.length} defaultOpen accent="#7B5BD6">
               <FilesGrid files={files}/>
             </Accordion>
-            <Accordion icon={window.EprIcon.shield} title="רשימת מסמכים נדרשים" badge="3/5" accent="#E8843D">
+            <Accordion icon={window.EprIcon.shield} title={T('רשימת מסמכים נדרשים')} badge="3/5" accent="#E8843D">
               <DocChecklist/>
             </Accordion>
-            <Accordion icon={window.EprIcon.shieldCheck} title="היסטוריית אישורים" badge={buildApprovals(row).length} accent="#2AA7B8">
+            <Accordion icon={window.EprIcon.shieldCheck} title={T('היסטוריית אישורים')} badge={buildApprovals(row).length} accent="#2AA7B8">
               <ApprovalHistory row={row}/>
             </Accordion>
-            <Accordion icon={window.EprIcon.history} title="לוג פעילויות" accent="#F2B134">
+            <Accordion icon={window.EprIcon.history} title={T('לוג פעילויות')} accent="#F2B134">
               <ActivityFeed row={row}/>
             </Accordion>
           </div>
@@ -929,6 +951,8 @@ function RequestDetailPageV3({ row, goPage, goBack }) {
 function NewRequestModal() {
   const I = window.EprIcon;
   const d = window.eprData;
+  if (window.useEprLang) window.useEprLang();
+  const T = window.eprT || ((s)=>s);
   const [open, setOpen] = rdS(false);
   const [step, setStep] = rdS(1);
   const [form, setForm] = rdS({ resident:'', phone:'', dept:'', subject:'', desc:'', priority:'רגיל', channel:'מוקד 106', sla:'25.04.26' });
@@ -979,7 +1003,7 @@ function NewRequestModal() {
             <div className="rd-form-grid" style={{marginTop:14}}>
               <div className="rd-fld" style={{gridColumn:'1 / -1'}}>
                 <label>שם הפונה *</label>
-                <input value={form.resident} onChange={e=>set('resident',e.target.value)} placeholder="שם מלא" autoFocus/>
+                <input value={form.resident} onChange={e=>set('resident',e.target.value)} placeholder={T('שם מלא')} autoFocus/>
               </div>
               <div className="rd-fld">
                 <label>טלפון *</label>
@@ -1016,11 +1040,11 @@ function NewRequestModal() {
               </div>
               <div className="rd-fld" style={{gridColumn:'1 / -1'}}>
                 <label>נושא *</label>
-                <input value={form.subject} onChange={e=>set('subject',e.target.value)} placeholder="לדוגמה: פינוי גזם — ההדרים 12"/>
+                <input value={form.subject} onChange={e=>set('subject',e.target.value)} placeholder={T('לדוגמה: פינוי גזם — ההדרים 12')}/>
               </div>
               <div className="rd-fld" style={{gridColumn:'1 / -1'}}>
                 <label>תיאור</label>
-                <textarea rows={3} value={form.desc} onChange={e=>set('desc',e.target.value)} placeholder="תיאור מפורט של הפנייה…"/>
+                <textarea rows={3} value={form.desc} onChange={e=>set('desc',e.target.value)} placeholder={T('תיאור מפורט של הפנייה…')}/>
               </div>
             </div>
           )}
