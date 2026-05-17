@@ -82,21 +82,24 @@ function AccessibilityMenu() {
   return (<>
     <button
       ref={fabRef}
-      className="ep-a11y-fab"
+      className={`ep-a11y-fab ${open ? 'open' : ''}`}
       onClick={()=>setOpen(o=>!o)}
       data-toast="off"
       aria-label={t('תפריט נגישות')}
       aria-expanded={open}
       aria-controls="ep-a11y-panel">
-      {/* Universal accessibility wheelchair-on-circle icon */}
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="4" r="1.6" fill="currentColor"/>
-        <path d="M7 7c2 1 3 1 5 1s3 0 5-1"/>
-        <path d="M12 8v6"/>
-        <path d="M8 14h8"/>
-        <path d="M9 14l-2 5"/>
-        <path d="M15 14l2 5"/>
+      {/* International Symbol of Access — clean wheelchair pictogram */}
+      <svg className="ep-a11y-fab-ic" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true" focusable="false">
+        {/* Head */}
+        <circle cx="20" cy="5.5" r="2.6"/>
+        {/* Body + arm */}
+        <path d="M19.4 9.4c-1.1 0-2 .8-2.1 1.9l-.5 4.2c-.1.9.5 1.7 1.4 1.9l4.6.9-.6 3.6c-.1.7.3 1.4 1 1.5.7.1 1.4-.3 1.5-1l.8-4.5c.2-.9-.4-1.8-1.3-2L20 14.9l.3-2.4 2.6 1.5c.6.4 1.4.2 1.8-.4.4-.6.2-1.4-.4-1.8l-3.3-1.9c-.5-.3-1.1-.5-1.6-.5z"/>
+        {/* Wheelchair wheel (outer) */}
+        <circle cx="13" cy="21" r="7.3" fill="none" stroke="currentColor" strokeWidth="2"/>
+        {/* Wheel hub */}
+        <circle cx="13" cy="21" r="1.6"/>
       </svg>
+      <span className="ep-a11y-fab-pulse" aria-hidden="true"/>
     </button>
 
     {open && (
