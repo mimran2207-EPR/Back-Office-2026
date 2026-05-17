@@ -16,10 +16,12 @@ function ToastHost() {
     return () => { delete window.eprToast; };
   },[]);
   return (
-    <div className="ep-toasts" aria-live="polite">
+    <div className="ep-toasts" aria-live="polite" aria-atomic="false" aria-relevant="additions">
       {items.map(t => (
-        <div key={t.id} className={`ep-toast ${t.kind}`} role="status">
-          <span className="ep-toast-dot"/>
+        <div key={t.id} className={`ep-toast ${t.kind}`}
+          role={t.kind==='danger' ? 'alert' : 'status'}
+          aria-live={t.kind==='danger' ? 'assertive' : 'polite'}>
+          <span className="ep-toast-dot" aria-hidden="true"/>
           <span>{t.text}</span>
         </div>
       ))}
@@ -182,12 +184,12 @@ function NewRequestModal() {
   const canStep1 = form.resident.trim().length>1 && form.phone.trim().length>=9;
   const canStep2 = form.cat.trim().length>0 && form.desc.trim().length>3;
   return (
-    <div className="ep-modal-overlay" onMouseDown={close}>
-      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog">
+    <div className="ep-modal-overlay" onMouseDown={close} role="presentation">
+      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="ep-new-req-title">
         <header className="ep-modal-head">
           <div>
             <div className="ep-card-eb">פנייה חדשה</div>
-            <h3>{step===1?'פרטי פונה':step===2?'תוכן הפנייה':'סקירה ושליחה'}</h3>
+            <h3 id="ep-new-req-title">{step===1?'פרטי פונה':step===2?'תוכן הפנייה':'סקירה ושליחה'}</h3>
           </div>
           <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label="סגור">
             <I.close/>

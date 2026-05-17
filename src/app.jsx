@@ -31,9 +31,11 @@ function EprApp() {
   if (!loggedIn || route.page === 'login') return <LoginPage onLogin={()=>{ setLoggedIn(true); goPage('dashboard'); }}/>;
   if (route.page === 'reset-password') return <ResetPasswordPage goPage={goPage}/>;
   if (route.page === 'pending') return <PendingPage goPage={goPage}/>;
+  if (route.page === 'accessibility-statement') return <AccessibilityStatementPage goPage={goPage}/>;
 
   const { page } = route;
 
+  const t = window.eprT || ((s)=>s);
   // Crumbs
   const titleMap = {
     'dashboard':'תמונת מצב','requests':'ניהול פניות','request-detail':'פרטי פנייה',
@@ -47,10 +49,11 @@ function EprApp() {
 
   return (
     <div className="ep-app">
+      <a className="ep-skip" href="#ep-main-content">{t('דלג לתוכן')}</a>
       <Sidebar page={page} setPage={goPage}/>
-      <main className="ep-main">
+      <main className="ep-main" id="ep-main-content" tabIndex={-1}>
         <TopBar crumbs={crumbs} goPage={goPage}/>
-        <div className="ep-content">
+        <div className="ep-content" role="region" aria-label={crumbs[crumbs.length-1]}>
           {page==='dashboard'    && <DashboardPage openRequest={openRequest} goPage={goPage}/>}
           {page==='requests'     && <RequestsPage openRequest={(r)=>openRequestFull(r)} goPage={goPage}/>}
           {page==='request-detail' && <RequestDetailPageV3 row={detailRow} goPage={goPage} goBack={()=>goPage('requests')}/>}
@@ -68,11 +71,12 @@ function EprApp() {
       </main>
       <RequestDrawer row={drawer} onClose={()=>setDrawer(null)} onOpenFull={()=>{ openRequestFull(drawer); setDrawer(null); }}/>
       <EprInteractions/>
+      <AccessibilityMenu/>
     </div>
   );
 }
 
-const VALID = ['dashboard','requests','request-detail','residents','team','bulk','users','saved-reports','my-reports','install','settings','login','reset-password','pending'];
+const VALID = ['dashboard','requests','request-detail','residents','team','bulk','users','saved-reports','my-reports','install','settings','login','reset-password','pending','accessibility-statement'];
 function validRoute(p) { return VALID.includes(p) || p.startsWith('settings/'); }
 function settingLabel(p) {
   const map = {'general':'כללי','business-calendar':'יומן עסקי','organization':'מבנה ארגוני','topics':'נושאי פנייה','sla':'זמני SLA','forms':'טפסי פנייה','channels':'ערוצי כניסה','auto-routing':'ניתוב אוטומטי','templates':'תבניות הודעה','integrations':'אינטגרציות','security':'אבטחה והרשאות','notifications':'התראות','branding':'מיתוג ופורטל','audit':'יומן ביקורת'};
