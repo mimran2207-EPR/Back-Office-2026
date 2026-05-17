@@ -139,7 +139,8 @@ function ChartWidget({ title, subtitle, data, primary = 'bars', availableTypes =
 
 // ── Widgets grid — 6 widgets, 3×2 ─────────────────────────────
 function WidgetsGrid({ goPage }) {
-  // Palette matching EPR teal system + accent colors
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const C = {
     teal: '#2AA7B8',
     teal2: '#4AB7C4',
@@ -152,12 +153,12 @@ function WidgetsGrid({ goPage }) {
   };
 
   const byDept = [
-    { label:'רווחה', v:42, color:C.teal },
-    { label:'הנדסה', v:38, color:C.blue },
-    { label:'חינוך', v:31, color:C.amber },
-    { label:'גבייה', v:24, color:C.purple },
-    { label:'תברואה', v:18, color:C.green },
-    { label:'ביטחון', v:11, color:C.red },
+    { label:t('רווחה'), v:42, color:C.teal },
+    { label:t('הנדסה'), v:38, color:C.blue },
+    { label:t('חינוך'), v:31, color:C.amber },
+    { label:t('גבייה'), v:24, color:C.purple },
+    { label:t('תברואה'), v:18, color:C.green },
+    { label:t('ביטחון'), v:11, color:C.red },
   ];
 
   const urgentTop = [
@@ -169,9 +170,9 @@ function WidgetsGrid({ goPage }) {
   ];
 
   const health = [
-    { label:'בזמן', v:184, color:C.green },
-    { label:'בסיכון', v:42, color:C.amber },
-    { label:'חריגה', v:23, color:C.red },
+    { label:t('בזמן'), v:184, color:C.green },
+    { label:t('בסיכון'), v:42, color:C.amber },
+    { label:t('חריגה'), v:23, color:C.red },
   ];
   const healthTotal = 249;
 
@@ -192,26 +193,26 @@ function WidgetsGrid({ goPage }) {
   ];
 
   const ageBuckets = [
-    { label:'0–24 שעות', v:62, color:C.green },
-    { label:'1–3 ימים', v:48, color:C.teal },
-    { label:'4–7 ימים', v:31, color:C.amber },
-    { label:'מעל שבוע', v:14, color:C.red },
+    { label:t('0–24 שעות'), v:62, color:C.green },
+    { label:t('1–3 ימים'), v:48, color:C.teal },
+    { label:t('4–7 ימים'), v:31, color:C.amber },
+    { label:t('מעל שבוע'), v:14, color:C.red },
   ];
 
   return (
     <div className="wg-grid">
-      <ChartWidget title="פניות פתוחות לפי מחלקה" subtitle="חלוקת הפניות הפתוחות" data={byDept} onOpen={()=>goPage&&goPage('requests')}/>
-      <ChartWidget title="בריאות ארגונית" subtitle="בזמן / בסיכון / חריגה"
+      <ChartWidget title={t('פניות פתוחות לפי מחלקה')} subtitle={t('חלוקת הפניות הפתוחות')} data={byDept} onOpen={()=>goPage&&goPage('requests')}/>
+      <ChartWidget title={t('בריאות ארגונית')} subtitle={t('בזמן / בסיכון / חריגה')}
         data={health} primary="donut"
-        donutCenter={{ value: healthTotal, label: 'סה״כ' }}
+        donutCenter={{ value: healthTotal, label: t('סה״כ') }}
         onOpen={()=>goPage&&goPage('requests')}/>
-      <ChartWidget title="הפניות הדחופות ביותר" subtitle="Top 5 לפי עדיפות וזמן המתנה"
+      <ChartWidget title={t('הפניות הדחופות ביותר')} subtitle={t('Top 5 לפי עדיפות וזמן המתנה')}
         data={urgentTop} primary="top5" onOpen={()=>goPage&&goPage('requests')}/>
-      <ChartWidget title="גורמים מטפלים מובילים" subtitle="פניות שנסגרו · 30 ימים"
+      <ChartWidget title={t('גורמים מטפלים מובילים')} subtitle={t('פניות שנסגרו · 30 ימים')}
         data={topClerks} onOpen={()=>goPage&&goPage('team')}/>
-      <ChartWidget title="גיל הפנייה" subtitle="התפלגות זמן פתיחה"
+      <ChartWidget title={t('גיל הפנייה')} subtitle={t('התפלגות זמן פתיחה')}
         data={ageBuckets} onOpen={()=>goPage&&goPage('requests')}/>
-      <ChartWidget title="נושאים מובילים" subtitle="5 הקטגוריות הגדולות"
+      <ChartWidget title={t('נושאים מובילים')} subtitle={t('5 הקטגוריות הגדולות')}
         data={topics} onOpen={()=>goPage&&goPage('settings/topics')}/>
     </div>
   );

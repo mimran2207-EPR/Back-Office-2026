@@ -231,29 +231,31 @@ function ActionDialog({ open, onClose, kind, onConfirm }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function RDTopBar({ row, goPage, goBack, chatOpen, onToggleChat, noteCount, canAct, isAdmin, onAdminOverride, activeApprover, onAssign }) {
   const I = window.EprIcon;
-  const t = tone(row.status);
+  if (window.useEprLang) window.useEprLang();
+  const T = window.eprT || ((s)=>s);
+  const tn = tone(row.status);
   const sla = row.sla;
   const slaTone = sla<30?'low':sla<60?'mid':'';
 
   return (
     <div className="rd-topbar">
       <div className="row" style={{gap:14}}>
-        <button className="ep-icon-btn" onClick={goBack} aria-label="חזור">
+        <button className="ep-icon-btn" onClick={goBack} aria-label={T('חזור אחורה')}>
           <I.chevR width={14} height={14}/>
         </button>
         <div className="rd-bcrumb">
-          <button className="rd-bcrumb-link" onClick={()=>goPage('requests')}>פניות</button>
+          <button className="rd-bcrumb-link" onClick={()=>goPage('requests')}>{T('פניות')}</button>
           <span className="rd-bcrumb-sep">‹</span>
           <span>{row.dept}</span>
         </div>
         <h1 className="rd-title">{row.title}</h1>
         <span className="ep-mono rd-num">#{row.id.replace('REQ-','')}</span>
-        <button className="ep-icon-btn" style={{width:24,height:24}} title="העתק מספר"><I.copy width={11} height={11}/></button>
+        <button className="ep-icon-btn" style={{width:24,height:24}} title={T('העתק מספר')} aria-label={T('העתק מספר')}><I.copy width={11} height={11}/></button>
         <div className="rd-applicant-chip">
           <I.user width={12} height={12}/>{row.resident}
         </div>
-        <span className="rd-status-pill" style={{background:t.bg,color:t.tx}}>
-          <span className="rd-status-dot" style={{background:t.dot}}/>{row.status}
+        <span className="rd-status-pill" style={{background:tn.bg,color:tn.tx}}>
+          <span className="rd-status-dot" style={{background:tn.dot}}/>{T(row.status)}
         </span>
         <div className={`rd-sla-chip ${slaTone}`}>
           <I.clock width={11} height={11}/>{row.slaText}
@@ -263,21 +265,21 @@ function RDTopBar({ row, goPage, goBack, chatOpen, onToggleChat, noteCount, canA
         {!canAct && activeApprover && (
           <div className="rd-perm-warn">
             <I.alert width={12} height={12}/>
-            <span>שלב זה מוקצה ל<b>{activeApprover}</b></span>
-            {isAdmin && <button className="rd-perm-override" onClick={onAdminOverride}>דרוס כמנהל</button>}
+            <span>{T('שלב זה מוקצה ל')}<b>{activeApprover}</b></span>
+            {isAdmin && <button className="rd-perm-override" onClick={onAdminOverride}>{T('דרוס כמנהל')}</button>}
           </div>
         )}
         <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={onAssign}>
-          <I.users width={12} height={12}/>העבר למטפל
+          <I.users width={12} height={12}/>{T('העבר למטפל')}
         </button>
         <button className={`ep-btn ${chatOpen?'ep-btn-primary':'ep-btn-ghost'} ep-btn-sm`} onClick={onToggleChat}>
-          <I.msg width={12} height={12}/>צ׳אט פנימי
+          <I.msg width={12} height={12}/>{T('צ׳אט פנימי')}
           {noteCount>0 && <span className="rd-pill-count">{noteCount}</span>}
         </button>
         <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.print()}>
-          <I.download width={12} height={12}/>הדפסה
+          <I.download width={12} height={12}/>{T('הדפסה')}
         </button>
-        <button className="ep-icon-btn" aria-label="עוד פעולות"><I.more width={14} height={14}/></button>
+        <button className="ep-icon-btn" aria-label={T('עוד פעולות')}><I.more width={14} height={14}/></button>
       </div>
     </div>
   );

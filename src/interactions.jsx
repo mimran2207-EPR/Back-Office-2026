@@ -160,6 +160,8 @@ function ButtonFeedback() {
 
 /* ───────────────────────── New request modal ───────────────────────── */
 function NewRequestModal() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [open, setOpen] = tsS(false);
   const [step, setStep] = tsS(1);
   const [form, setForm] = tsS({ resident:'', phone:'', dept:'תשתיות', cat:'', priority:'רגיל', desc:'' });
@@ -188,10 +190,10 @@ function NewRequestModal() {
       <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="ep-new-req-title">
         <header className="ep-modal-head">
           <div>
-            <div className="ep-card-eb">פנייה חדשה</div>
-            <h3 id="ep-new-req-title">{step===1?'פרטי פונה':step===2?'תוכן הפנייה':'סקירה ושליחה'}</h3>
+            <div className="ep-card-eb">{t('פנייה חדשה')}</div>
+            <h3 id="ep-new-req-title">{step===1?t('פרטי פונה'):step===2?t('תוכן הפנייה'):t('סקירה ושליחה')}</h3>
           </div>
-          <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label="סגור">
+          <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}>
             <I.close/>
           </button>
         </header>
@@ -200,7 +202,7 @@ function NewRequestModal() {
           {[1,2,3].map(n=>(
             <div key={n} className={`ep-modal-step ${step>=n?'on':''} ${step===n?'now':''}`}>
               <span className="ep-modal-step-n">{n}</span>
-              <span>{n===1?'פונה':n===2?'תוכן':'סקירה'}</span>
+              <span>{n===1?t('פונה'):n===2?t('תוכן ההודעה'):t('סיכום')}</span>
             </div>
           ))}
         </div>
@@ -208,81 +210,81 @@ function NewRequestModal() {
         <div className="ep-modal-body">
           {step===1 && (<>
             <div className="ep-detail-grid">
-              <div className="ep-field"><label>שם מלא ‹</label><input value={form.resident} onChange={e=>set('resident',e.target.value)} placeholder="שם פרטי + שם משפחה"/></div>
-              <div className="ep-field"><label>טלפון ‹</label><input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder="050-1234567"/></div>
-              <div className="ep-field"><label>ת״ז</label><input placeholder="9 ספרות"/></div>
-              <div className="ep-field"><label>אימייל</label><input type="email" placeholder="name@example.com"/></div>
-              <div className="ep-field full"><label>כתובת המקרה</label><input placeholder="רחוב, מספר, שכונה"/></div>
+              <div className="ep-field"><label>{t('שם מלא ‹')}</label><input value={form.resident} onChange={e=>set('resident',e.target.value)} placeholder={t('שם פרטי + שם משפחה')}/></div>
+              <div className="ep-field"><label>{t('טלפון ‹')}</label><input value={form.phone} onChange={e=>set('phone',e.target.value)} placeholder="050-1234567"/></div>
+              <div className="ep-field"><label>{t('ת״ז')}</label><input placeholder={t('9 ספרות')}/></div>
+              <div className="ep-field"><label>{t('אימייל')}</label><input type="email" placeholder="name@example.com"/></div>
+              <div className="ep-field full"><label>{t('כתובת המקרה')}</label><input placeholder={t('רחוב, מספר, שכונה')}/></div>
             </div>
             <div className="ep-pill-row">
-              <span className="ep-muted" style={{fontSize:12}}>ערוץ פנייה:</span>
-              {[['phone','טלפון'],['mail','דוא״ל'],['walkin','התייצבות'],['app','אפליקציה'],['form','אתר']].map(([v,t])=>(
-                <button key={v} className={`ep-pill ${chan===v?'on':''}`} onClick={()=>setChan(v)} data-toast="off">{t}</button>
+              <span className="ep-muted" style={{fontSize:12}}>{t('ערוץ פנייה:')}</span>
+              {[['phone','טלפון (ערוץ)'],['mail','דוא״ל'],['walkin','התייצבות'],['app','אפליקציה'],['form','אתר']].map(([v,lbl])=>(
+                <button key={v} className={`ep-pill ${chan===v?'on':''}`} onClick={()=>setChan(v)} data-toast="off">{t(lbl)}</button>
               ))}
             </div>
           </>)}
 
           {step===2 && (<>
             <div className="ep-detail-grid">
-              <div className="ep-field"><label>מחלקה ‹</label>
+              <div className="ep-field"><label>{t('מחלקה ‹')}</label>
                 <select value={form.dept} onChange={e=>set('dept',e.target.value)}>
                   {['תשתיות','גינון','איכות סביבה','הנדסה','תברואה','רישוי עסקים','גביה','שירות לתושב'].map(d=><option key={d}>{d}</option>)}
                 </select>
               </div>
-              <div className="ep-field"><label>קטגוריה ‹</label>
-                <input value={form.cat} onChange={e=>set('cat',e.target.value)} placeholder="למשל: בור בכביש"/>
+              <div className="ep-field"><label>{t('קטגוריה ‹')}</label>
+                <input value={form.cat} onChange={e=>set('cat',e.target.value)} placeholder="…"/>
               </div>
-              <div className="ep-field full"><label>תיאור ‹</label>
-                <textarea rows={4} value={form.desc} onChange={e=>set('desc',e.target.value)} placeholder="תאר את הפנייה כפי שהבנת מהפונה…"/>
+              <div className="ep-field full"><label>{t('תיאור ‹')}</label>
+                <textarea rows={4} value={form.desc} onChange={e=>set('desc',e.target.value)} placeholder={t('תאר את הפנייה כפי שהבנת מהפונה…')}/>
               </div>
             </div>
             <div className="ep-pill-row">
-              <span className="ep-muted" style={{fontSize:12}}>עדיפות:</span>
+              <span className="ep-muted" style={{fontSize:12}}>{t('עדיפות:')}</span>
               {['רגיל','גבוה','דחוף'].map(p=>(
-                <button key={p} className={`ep-pill ${form.priority===p?'on':''}`} onClick={()=>set('priority',p)} data-toast="off">{p}</button>
+                <button key={p} className={`ep-pill ${form.priority===p?'on':''}`} onClick={()=>set('priority',p)} data-toast="off">{t(p)}</button>
               ))}
             </div>
             <div className="ep-attach-drop">
               <I.paperclip width={18} height={18}/>
-              <span>גרור קבצים לכאן או <a href="#" onClick={e=>e.preventDefault()}>בחר מהמחשב</a></span>
+              <span>{t('גרור קבצים לכאן או')} <a href="#" onClick={e=>e.preventDefault()}>{t('בחר מהמחשב')}</a></span>
             </div>
           </>)}
 
           {step===3 && (<>
             <div className="ep-modal-summary">
               <div className="ep-modal-summary-card">
-                <h4>פונה</h4>
+                <h4>{t('פונה')}</h4>
                 <dl className="ep-kv-grid">
-                  <dt>שם</dt><dd>{form.resident||<em className="ep-muted">לא הוזן</em>}</dd>
-                  <dt>טלפון</dt><dd className="ep-mono">{form.phone||'—'}</dd>
-                  <dt>ערוץ</dt><dd>{({phone:'טלפון',mail:'דוא״ל',walkin:'התייצבות',app:'אפליקציה',form:'אתר'})[chan]}</dd>
+                  <dt>{t('שם')}</dt><dd>{form.resident||<em className="ep-muted">—</em>}</dd>
+                  <dt>{t('טלפון')}</dt><dd className="ep-mono">{form.phone||'—'}</dd>
+                  <dt>{t('ערוץ')}</dt><dd>{t(({phone:'טלפון (ערוץ)',mail:'דוא״ל',walkin:'התייצבות',app:'אפליקציה',form:'אתר'})[chan])}</dd>
                 </dl>
               </div>
               <div className="ep-modal-summary-card">
-                <h4>פנייה</h4>
+                <h4>{t('פנייה')}</h4>
                 <dl className="ep-kv-grid">
-                  <dt>מחלקה</dt><dd>{form.dept}</dd>
-                  <dt>קטגוריה</dt><dd>{form.cat||'—'}</dd>
-                  <dt>עדיפות</dt><dd><span className={`ep-pri-dot ${form.priority==='דחוף'?'high':form.priority==='גבוה'?'mid':'low'}`}/>{form.priority}</dd>
-                  <dt>תיאור</dt><dd className="ep-truncate-3">{form.desc||'—'}</dd>
+                  <dt>{t('מחלקה')}</dt><dd>{form.dept}</dd>
+                  <dt>{t('קטגוריה')}</dt><dd>{form.cat||'—'}</dd>
+                  <dt>{t('עדיפות')}</dt><dd><span className={`ep-pri-dot ${form.priority==='דחוף'?'high':form.priority==='גבוה'?'mid':'low'}`}/>{t(form.priority)}</dd>
+                  <dt>{t('תיאור')}</dt><dd className="ep-truncate-3">{form.desc||'—'}</dd>
                 </dl>
               </div>
             </div>
             <div className="ep-callout">
               <I.alert width={16} height={16}/>
               <div>
-                <b>שיוך אוטומטי:</b> בלחיצה על "צור פנייה" תשובץ למחלקת {form.dept} ותקבל מזהה REQ. הפונה יקבל SMS עם המזהה ואופציה למעקב.
+                <b>{t('שיוך')}:</b> {form.dept}
               </div>
             </div>
           </>)}
         </div>
 
         <footer className="ep-modal-foot">
-          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">ביטול</button>
+          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">{t('ביטול')}</button>
           <div style={{display:'flex',gap:8}}>
-            {step>1 && <button className="ep-btn ep-btn-ghost" onClick={prev} data-toast="off">‹ הקודם</button>}
-            {step<3 && <button className="ep-btn ep-btn-primary" disabled={(step===1&&!canStep1)||(step===2&&!canStep2)} onClick={next} data-toast="off">הבא ‹</button>}
-            {step===3 && <button className="ep-btn ep-btn-primary" onClick={submit} data-toast="off">צור פנייה ←</button>}
+            {step>1 && <button className="ep-btn ep-btn-ghost" onClick={prev} data-toast="off">{t('‹ הקודם')}</button>}
+            {step<3 && <button className="ep-btn ep-btn-primary" disabled={(step===1&&!canStep1)||(step===2&&!canStep2)} onClick={next} data-toast="off">{t('הבא ‹')}</button>}
+            {step===3 && <button className="ep-btn ep-btn-primary" onClick={submit} data-toast="off">{t('צור פנייה ←')}</button>}
           </div>
         </footer>
       </div>
@@ -292,6 +294,8 @@ function NewRequestModal() {
 
 /* ─────────────────── FormBuilder modal ─────────────────── */
 function FormBuilderModal() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [open, setOpen] = tsS(false);
   const [step, setStep] = tsS(1);
   const [form, setForm] = tsS({ name:'', category:'תשתיות', sla:24, active:true, public:true });
@@ -326,39 +330,39 @@ function FormBuilderModal() {
   const typeIcons = { text:'doc', textarea:'note', number:'pay', date:'calendar', select:'chevD', file:'paperclip', checkbox:'check' };
   return (
     <div className="ep-modal-overlay" onMouseDown={close}>
-      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()}>
+      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="ep-modal-head">
-          <div><div className="ep-card-eb">טופס חדש</div><h3>{step===1?'פרטי טופס':step===2?'בניית שדות':'סקירה ופרסום'}</h3></div>
-          <button className="ep-icon-btn" onClick={close} data-toast="off"><I.close/></button>
+          <div><div className="ep-card-eb">{t('טופס חדש')}</div><h3>{step===1?t('פרטי טופס'):step===2?t('בניית שדות'):t('סקירה ופרסום')}</h3></div>
+          <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}><I.close/></button>
         </header>
         <div className="ep-modal-stepper">
           {[1,2,3,4].map(n=>(<div key={n} className={`ep-modal-step ${step>=n?'on':''} ${step===n?'now':''}`}>
-            <span className="ep-modal-step-n">{n}</span><span>{n===1?'פרטים':n===2?'שדות':n===3?'API':'סקירה'}</span>
+            <span className="ep-modal-step-n">{n}</span><span>{n===1?t('פרטים'):n===2?t('שדות'):n===3?'API':t('סקירה')}</span>
           </div>))}
         </div>
         <div className="ep-modal-body">
           {step===1 && (<>
             <div className="ep-detail-grid">
-              <div className="ep-field full"><label>שם הטופס ‹</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="לדוגמה: דיווח על בור בכביש"/></div>
-              <div className="ep-field"><label>מחלקה</label>
+              <div className="ep-field full"><label>{t('שם הטופס ‹')}</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder={t('לדוגמה: דיווח על בור בכביש')}/></div>
+              <div className="ep-field"><label>{t('מחלקה')}</label>
                 <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>
                   {['תשתיות','גינון','איכות סביבה','הנדסה','תברואה','חינוך','כללי'].map(d=><option key={d}>{d}</option>)}
                 </select>
               </div>
-              <div className="ep-field"><label>SLA (שעות)</label><input type="number" value={form.sla} onChange={e=>setForm({...form,sla:+e.target.value})}/></div>
+              <div className="ep-field"><label>{t('SLA (שעות)')}</label><input type="number" value={form.sla} onChange={e=>setForm({...form,sla:+e.target.value})}/></div>
               <div className="ep-field full">
-                <label>תיאור הטופס (לתושב)</label>
-                <textarea rows={2} placeholder="טקסט הסבר שיוצג בראש הטופס…"/>
+                <label>{t('תיאור הטופס (לתושב)')}</label>
+                <textarea rows={2} placeholder={t('טקסט הסבר שיוצג בראש הטופס…')}/>
               </div>
             </div>
             <div className="ep-pill-row">
               <label className="ep-pill" style={{display:'inline-flex',alignItems:'center',gap:6}}>
                 <input type="checkbox" checked={form.active} onChange={e=>setForm({...form,active:e.target.checked})}/>
-                <span>טופס פעיל</span>
+                <span>{t('טופס פעיל')}</span>
               </label>
               <label className="ep-pill" style={{display:'inline-flex',alignItems:'center',gap:6}}>
                 <input type="checkbox" checked={form.public} onChange={e=>setForm({...form,public:e.target.checked})}/>
-                <span>זמין לציבור</span>
+                <span>{t('זמין לציבור')}</span>
               </label>
             </div>
           </>)}
@@ -379,9 +383,9 @@ function FormBuilderModal() {
               ))}
             </div>
             <div className="ep-pill-row" style={{marginTop:4}}>
-              <span className="ep-muted" style={{fontSize:12}}>הוסף שדה:</span>
+              <span className="ep-muted" style={{fontSize:12}}>{t('הוסף שדה:')}</span>
               {Object.entries(typeNames).map(([v,n])=>(
-                <button key={v} className="ep-pill" onClick={()=>addField(v)} data-toast="off">+ {n}</button>
+                <button key={v} className="ep-pill" onClick={()=>addField(v)} data-toast="off">+ {t(n)}</button>
               ))}
             </div>
           </>)}
@@ -501,11 +505,11 @@ function FormBuilderModal() {
           </>)}
         </div>
         <footer className="ep-modal-foot">
-          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">ביטול</button>
+          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">{t('ביטול')}</button>
           <div style={{display:'flex',gap:8}}>
-            {step>1 && <button className="ep-btn ep-btn-ghost" onClick={()=>setStep(step-1)} data-toast="off">‹ הקודם</button>}
-            {step<4 && <button className="ep-btn ep-btn-primary" disabled={step===1&&!form.name.trim()} onClick={()=>setStep(step+1)} data-toast="off">הבא ‹</button>}
-            {step===4 && <button className="ep-btn ep-btn-primary" onClick={submit} data-toast="off">צור טופס ←</button>}
+            {step>1 && <button className="ep-btn ep-btn-ghost" onClick={()=>setStep(step-1)} data-toast="off">{t('‹ הקודם')}</button>}
+            {step<4 && <button className="ep-btn ep-btn-primary" disabled={step===1&&!form.name.trim()} onClick={()=>setStep(step+1)} data-toast="off">{t('הבא ‹')}</button>}
+            {step===4 && <button className="ep-btn ep-btn-primary" onClick={submit} data-toast="off">{t('צור טופס ←')}</button>}
           </div>
         </footer>
       </div>
@@ -515,6 +519,8 @@ function FormBuilderModal() {
 
 /* ─────────────────── ReportBuilder modal ─────────────────── */
 function ReportBuilderModal() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [open, setOpen] = tsS(false);
   const [step, setStep] = tsS(1);
   const [r, setR] = tsS({ name:'', source:'requests', dims:['dept','status'], measures:['count'], chart:'bars', schedule:'none' });
@@ -534,81 +540,81 @@ function ReportBuilderModal() {
   const charts = [['bars','עמודות','chart'],['donut','דונאט','filter'],['line','קו','up'],['table','טבלה','doc']];
   return (
     <div className="ep-modal-overlay" onMouseDown={close}>
-      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()}>
+      <div className="ep-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="ep-modal-head">
-          <div><div className="ep-card-eb">דוח חדש</div><h3>{step===1?'פרטי דוח':step===2?'בניית הדוח':'תצוגה ותזמון'}</h3></div>
-          <button className="ep-icon-btn" onClick={close} data-toast="off"><I.close/></button>
+          <div><div className="ep-card-eb">{t('דוח חדש')}</div><h3>{step===1?t('פרטי דוח'):step===2?t('בניית הדוח'):t('תצוגה ותזמון')}</h3></div>
+          <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}><I.close/></button>
         </header>
         <div className="ep-modal-stepper">
           {[1,2,3].map(n=>(<div key={n} className={`ep-modal-step ${step>=n?'on':''} ${step===n?'now':''}`}>
-            <span className="ep-modal-step-n">{n}</span><span>{n===1?'פרטים':n===2?'נתונים':'תצוגה'}</span>
+            <span className="ep-modal-step-n">{n}</span><span>{n===1?t('פרטים'):n===2?t('נתונים'):t('תצוגה')}</span>
           </div>))}
         </div>
         <div className="ep-modal-body">
           {step===1 && (<>
             <div className="ep-detail-grid">
-              <div className="ep-field full"><label>שם הדוח ‹</label><input value={r.name} onChange={e=>setR({...r,name:e.target.value})} placeholder="לדוגמה: SLA שבועי לפי מחלקה"/></div>
-              <div className="ep-field full"><label>תיאור</label><textarea rows={2} placeholder="מטרת הדוח, קהל יעד…"/></div>
+              <div className="ep-field full"><label>{t('שם הדוח ‹')}</label><input value={r.name} onChange={e=>setR({...r,name:e.target.value})} placeholder="…"/></div>
+              <div className="ep-field full"><label>{t('תיאור')}</label><textarea rows={2} placeholder={t('מטרת הדוח, קהל יעד…')}/></div>
             </div>
             <div>
-              <div className="ep-card-eb" style={{marginBottom:8}}>מקור נתונים</div>
+              <div className="ep-card-eb" style={{marginBottom:8}}>{t('מקור נתונים')}</div>
               <div className="ep-pill-row">
-                {sources.map(([v,t])=>(<button key={v} className={`ep-pill ${r.source===v?'on':''}`} onClick={()=>setR({...r,source:v})} data-toast="off">{t}</button>))}
+                {sources.map(([v,lbl])=>(<button key={v} className={`ep-pill ${r.source===v?'on':''}`} onClick={()=>setR({...r,source:v})} data-toast="off">{t(lbl)}</button>))}
               </div>
             </div>
           </>)}
           {step===2 && (<>
             <div>
-              <div className="ep-card-eb" style={{marginBottom:8}}>חתוך לפי (Dimensions)</div>
+              <div className="ep-card-eb" style={{marginBottom:8}}>{t('חתוך לפי (Dimensions)')}</div>
               <div className="ep-pill-row">
-                {dims.map(([v,t])=>(<button key={v} className={`ep-pill ${r.dims.includes(v)?'on':''}`} onClick={()=>toggle('dims',v)} data-toast="off">{t}</button>))}
+                {dims.map(([v,lbl])=>(<button key={v} className={`ep-pill ${r.dims.includes(v)?'on':''}`} onClick={()=>toggle('dims',v)} data-toast="off">{t(lbl)}</button>))}
               </div>
             </div>
             <div>
-              <div className="ep-card-eb" style={{marginBottom:8}}>מדדים (Measures)</div>
+              <div className="ep-card-eb" style={{marginBottom:8}}>{t('מדדים (Measures)')}</div>
               <div className="ep-pill-row">
-                {measures.map(([v,t])=>(<button key={v} className={`ep-pill ${r.measures.includes(v)?'on':''}`} onClick={()=>toggle('measures',v)} data-toast="off">{t}</button>))}
+                {measures.map(([v,lbl])=>(<button key={v} className={`ep-pill ${r.measures.includes(v)?'on':''}`} onClick={()=>toggle('measures',v)} data-toast="off">{t(lbl)}</button>))}
               </div>
             </div>
             <div className="ep-callout">
               <I.alert width={16} height={16}/>
-              <div><b>תצוגה מקדימה:</b> {r.measures.length||0} מדדים × {r.dims.length||0} ממדים מתוך {sources.find(s=>s[0]===r.source)?.[1]}</div>
+              <div><b>{t('תצוגה מקדימה:')}</b> {r.measures.length||0} {t('מדדים')} × {r.dims.length||0} {t('ממדים')}</div>
             </div>
           </>)}
           {step===3 && (<>
             <div>
-              <div className="ep-card-eb" style={{marginBottom:8}}>סוג תצוגה</div>
+              <div className="ep-card-eb" style={{marginBottom:8}}>{t('סוג תצוגה')}</div>
               <div className="ep-pill-row">
-                {charts.map(([v,t])=>(<button key={v} className={`ep-pill ${r.chart===v?'on':''}`} onClick={()=>setR({...r,chart:v})} data-toast="off">{t}</button>))}
+                {charts.map(([v,lbl])=>(<button key={v} className={`ep-pill ${r.chart===v?'on':''}`} onClick={()=>setR({...r,chart:v})} data-toast="off">{t(lbl)}</button>))}
               </div>
             </div>
             <div>
-              <div className="ep-card-eb" style={{marginBottom:8}}>תזמון</div>
+              <div className="ep-card-eb" style={{marginBottom:8}}>{t('תזמון')}</div>
               <div className="ep-pill-row">
-                {[['none','ידני'],['daily','יומי 08:00'],['weekly','שבועי ראשון'],['monthly','חודשי 1.'],['alert','התראה בזמן אמת']].map(([v,t])=>(
-                  <button key={v} className={`ep-pill ${r.schedule===v?'on':''}`} onClick={()=>setR({...r,schedule:v})} data-toast="off">{t}</button>
+                {[['none','ידני'],['daily','יומי 08:00'],['weekly','שבועי ראשון'],['monthly','חודשי 1.'],['alert','התראה בזמן אמת']].map(([v,lbl])=>(
+                  <button key={v} className={`ep-pill ${r.schedule===v?'on':''}`} onClick={()=>setR({...r,schedule:v})} data-toast="off">{t(lbl)}</button>
                 ))}
               </div>
             </div>
             <div className="ep-modal-summary-card">
-              <h4>סיכום</h4>
+              <h4>{t('סיכום')}</h4>
               <dl className="ep-kv-grid">
-                <dt>שם</dt><dd>{r.name||<em className="ep-muted">לא הוזן</em>}</dd>
-                <dt>מקור</dt><dd>{sources.find(s=>s[0]===r.source)?.[1]}</dd>
-                <dt>ממדים</dt><dd>{r.dims.map(d=>dims.find(x=>x[0]===d)?.[1]).join(', ')||'—'}</dd>
-                <dt>מדדים</dt><dd>{r.measures.map(m=>measures.find(x=>x[0]===m)?.[1]).join(', ')||'—'}</dd>
-                <dt>תצוגה</dt><dd>{charts.find(c=>c[0]===r.chart)?.[1]}</dd>
-                <dt>תזמון</dt><dd>{r.schedule==='none'?'הפעלה ידנית':r.schedule}</dd>
+                <dt>{t('שם')}</dt><dd>{r.name||<em className="ep-muted">—</em>}</dd>
+                <dt>{t('מקור')}</dt><dd>{t(sources.find(s=>s[0]===r.source)?.[1])}</dd>
+                <dt>{t('ממדים')}</dt><dd>{r.dims.map(d=>t(dims.find(x=>x[0]===d)?.[1])).join(', ')||'—'}</dd>
+                <dt>{t('מדדים')}</dt><dd>{r.measures.map(m=>t(measures.find(x=>x[0]===m)?.[1])).join(', ')||'—'}</dd>
+                <dt>{t('תצוגה')}</dt><dd>{t(charts.find(c=>c[0]===r.chart)?.[1])}</dd>
+                <dt>{t('תזמון')}</dt><dd>{r.schedule==='none'?t('הפעלה ידנית'):t(r.schedule)}</dd>
               </dl>
             </div>
           </>)}
         </div>
         <footer className="ep-modal-foot">
-          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">ביטול</button>
+          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">{t('ביטול')}</button>
           <div style={{display:'flex',gap:8}}>
-            {step>1 && <button className="ep-btn ep-btn-ghost" onClick={()=>setStep(step-1)} data-toast="off">‹ הקודם</button>}
-            {step<3 && <button className="ep-btn ep-btn-primary" disabled={step===1&&!r.name.trim()} onClick={()=>setStep(step+1)} data-toast="off">הבא ‹</button>}
-            {step===3 && <button className="ep-btn ep-btn-primary" onClick={submit} data-toast="off">שמור דוח ←</button>}
+            {step>1 && <button className="ep-btn ep-btn-ghost" onClick={()=>setStep(step-1)} data-toast="off">{t('‹ הקודם')}</button>}
+            {step<3 && <button className="ep-btn ep-btn-primary" disabled={step===1&&!r.name.trim()} onClick={()=>setStep(step+1)} data-toast="off">{t('הבא ‹')}</button>}
+            {step===3 && <button className="ep-btn ep-btn-primary" onClick={submit} data-toast="off">{t('שמור דוח ←')}</button>}
           </div>
         </footer>
       </div>
@@ -705,6 +711,8 @@ const ENTITY_SCHEMAS = {
 };
 
 function EntityCreateModal() {
+  if (window.useEprLang) window.useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [config, setConfig] = tsS(null); // {kind, schema} or null
   const [data, setData] = tsS({});
   const I = window.EprIcon;
@@ -739,10 +747,10 @@ function EntityCreateModal() {
 
   return (
     <div className="ep-modal-overlay" onMouseDown={close}>
-      <div className="ep-modal" style={{maxWidth:520}} onMouseDown={e=>e.stopPropagation()}>
+      <div className="ep-modal" style={{maxWidth:520}} onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="ep-modal-head">
-          <div><div className="ep-card-eb">יצירה חדשה</div><h3>{config.schema.title}</h3></div>
-          <button className="ep-icon-btn" onClick={close} data-toast="off"><I.close/></button>
+          <div><div className="ep-card-eb">{t('יצירה חדשה')}</div><h3>{t(config.schema.title)}</h3></div>
+          <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}><I.close/></button>
         </header>
         <div className="ep-modal-body">
           <div className="ep-detail-grid">
@@ -797,8 +805,8 @@ function EntityCreateModal() {
           </div>
         </div>
         <footer className="ep-modal-foot">
-          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">ביטול</button>
-          <button className="ep-btn ep-btn-primary" disabled={!requiredOK} onClick={submit} data-toast="off">צור ←</button>
+          <button className="ep-btn ep-btn-ghost" onClick={close} data-toast="off">{t('ביטול')}</button>
+          <button className="ep-btn ep-btn-primary" disabled={!requiredOK} onClick={submit} data-toast="off">{t('צור ←')}</button>
         </footer>
       </div>
     </div>
