@@ -162,6 +162,12 @@ function ButtonFeedback() {
 function NewRequestModal() {
   if (window.useEprLang) window.useEprLang();
   const t = window.eprT || ((s)=>s);
+  const [depList, setDepList] = tsS(()=> window.eprData.departments.map(d=>d.name));
+  tsE(()=>{
+    const onUpdate = ()=> setDepList(window.eprData.departments.map(d=>d.name));
+    window.addEventListener('epr-departments-updated', onUpdate);
+    return ()=> window.removeEventListener('epr-departments-updated', onUpdate);
+  }, []);
   const [open, setOpen] = tsS(false);
   const [step, setStep] = tsS(1);
   const [form, setForm] = tsS({ resident:'', phone:'', dept:'תשתיות', cat:'', priority:'רגיל', desc:'' });
@@ -228,7 +234,7 @@ function NewRequestModal() {
             <div className="ep-detail-grid">
               <div className="ep-field"><label>{t('מחלקה ‹')}</label>
                 <select value={form.dept} onChange={e=>set('dept',e.target.value)}>
-                  {['תשתיות','גינון','איכות סביבה','הנדסה','תברואה','רישוי עסקים','גביה','שירות לתושב'].map(d=><option key={d}>{d}</option>)}
+                  {depList.map(d=><option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
               <div className="ep-field"><label>{t('קטגוריה ‹')}</label>
@@ -298,7 +304,18 @@ function FormBuilderModal() {
   const t = window.eprT || ((s)=>s);
   const [open, setOpen] = tsS(false);
   const [step, setStep] = tsS(1);
-  const [form, setForm] = tsS({ name:'', category:'תשתיות', sla:24, active:true, public:true });
+  // Live departments list — pulls from window.eprData (which already includes
+  // any custom departments hydrated from localStorage) and re-renders on
+  // `epr-departments-updated` so a new department appears in this dropdown
+  // immediately after creation, without closing/reopening the modal.
+  const [departments, setDepartments] = tsS(()=> window.eprData.departments.map(d=>d.name));
+  tsE(()=>{
+    const onUpdate = ()=> setDepartments(window.eprData.departments.map(d=>d.name));
+    window.addEventListener('epr-departments-updated', onUpdate);
+    return ()=> window.removeEventListener('epr-departments-updated', onUpdate);
+  }, []);
+  const defaultCat = departments[0] || 'תשתיות';
+  const [form, setForm] = tsS({ name:'', category:defaultCat, sla:24, active:true, public:true });
   const [fields, setFields] = tsS([
     { id:1, label:'כתובת המקרה', type:'text', required:true },
     { id:2, label:'תיאור', type:'textarea', required:true },
@@ -346,7 +363,7 @@ function FormBuilderModal() {
               <div className="ep-field full"><label>{t('שם הטופס ‹')}</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder={t('לדוגמה: דיווח על בור בכביש')}/></div>
               <div className="ep-field"><label>{t('מחלקה')}</label>
                 <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>
-                  {['תשתיות','גינון','איכות סביבה','הנדסה','תברואה','חינוך','כללי'].map(d=><option key={d}>{d}</option>)}
+                  {departments.map(d=><option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
               <div className="ep-field"><label>{t('SLA (שעות)')}</label><input type="number" value={form.sla} onChange={e=>setForm({...form,sla:+e.target.value})}/></div>
@@ -740,6 +757,15 @@ function EntityCreateModal() {
   const requiredOK = config.schema.fields.filter(f=>f.required).every(f => (data[f.k]||'').toString().trim().length>0);
   const submit = ()=>{
     const name = data.name || data.system || Object.values(data).find(x=>x);
+    // For known entity kinds, persist + update in-memory data so the rest of
+    // the app (dropdowns, dashboard widgets, etc.) immediately sees the new row.
+    if (config.kind === 'department' && window.eprAddDepartment) {
+      window.eprAddDepartment({
+        name, manager: data.manager, phone: data.phone,
+        email: data.email, color: data.color,
+        sla: data.sla ? Number(data.sla) : undefined,
+      });
+    }
     close();
     window.eprToast && window.eprToast(`${config.schema.toast}: "${name||'פריט חדש'}"`, 'success');
   };

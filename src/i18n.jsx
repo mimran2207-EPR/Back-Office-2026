@@ -42,7 +42,8 @@ const EPR_I18N = {
   // ── Sidebar settings children ───────────────────────────────
   'כללי':                { en:'General',              ar:'عام',                ru:'Общие' },
   'יומן עסקי':            { en:'Business calendar',    ar:'تقويم العمل',        ru:'Рабочий календарь' },
-  'מבנה ארגוני':         { en:'Organization',         ar:'الهيكل التنظيمي',    ru:'Структура организации' },
+  'מחלקות הארגון':       { en:'Departments',          ar:'أقسام المؤسسة',      ru:'Отделы организации' },
+  'מבנה ארגוני':         { en:'Departments',          ar:'أقسام المؤسسة',      ru:'Отделы организации' },
   'נושאי פנייה':         { en:'Topics',               ar:'مواضيع الطلبات',     ru:'Темы заявок' },
   'זמני SLA':            { en:'SLA times',            ar:'أوقات SLA',          ru:'Сроки SLA' },
   'הגדרות SLA':           { en:'SLA settings',         ar:'إعدادات SLA',        ru:'Настройки SLA' },
@@ -630,7 +631,7 @@ const EPR_I18N = {
   'לפני 4 ימים':            { en:'4 days ago',           ar:'منذ 4 أيام',         ru:'4 дня назад' },
   'לפני שבועיים':           { en:'Two weeks ago',        ar:'منذ أسبوعين',        ru:'Две недели назад' },
   'דוחות אישיים, תזמונים והתראות שיצרת': { en:'Personal reports, schedules and alerts you created', ar:'تقارير شخصية وجداول وتنبيهات أنشأتها', ru:'Личные отчёты, расписания и уведомления' },
-  'קונפיגורציה כוללת של EPR — מבנה ארגוני, SLA, ערוצים, התראות והרשאות': { en:'Full EPR configuration — organization, SLA, channels, alerts and permissions', ar:'تكوين EPR الكامل — التنظيم، SLA، القنوات، التنبيهات والصلاحيات', ru:'Полная конфигурация EPR — структура, SLA, каналы, уведомления и права' },
+  'קונפיגורציה כוללת של EPR — מחלקות, SLA, ערוצים, התראות והרשאות': { en:'Full EPR configuration — departments, SLA, channels, alerts and permissions', ar:'تكوين EPR الكامل — الأقسام، SLA، القنوات، التنبيهات والصلاحيات', ru:'Полная конфигурация EPR — отделы, SLA, каналы, уведомления и права' },
   'כתובת אימייל לא תקינה': { en:'Invalid email address', ar:'عنوان بريد إلكتروني غير صحيح', ru:'Неверный email' },
   'מספר טלפון לא תקין':   { en:'Invalid phone number',  ar:'رقم هاتف غير صحيح',  ru:'Неверный номер телефона' },
   'יש לתקן את השדות שמסומנים באדום לפני שמירה': { en:'Please fix the fields marked red before saving', ar:'يرجى تصحيح الحقول الحمراء قبل الحفظ', ru:'Сначала исправьте поля, отмеченные красным' },

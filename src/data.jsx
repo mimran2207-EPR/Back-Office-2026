@@ -148,6 +148,69 @@ const eprData = {
 };
 window.eprData = eprData;
 
+/* ─────────────────────────── Custom departments persistence ─────────────────────────── *
+ * User-created departments are stored in localStorage so they survive reloads and
+ * appear in every dropdown that reads `window.eprData.departments` (form builder,
+ * organization settings, routing rules, etc.).  We hydrate them onto the in-memory
+ * array at module load time and expose helpers to add / remove / list them.
+ * ──────────────────────────────────────────────────────────────────────────────── */
+const EPR_CUSTOM_DEPTS_KEY = 'epr-custom-departments-v1';
+
+function eprLoadCustomDepartments() {
+  try {
+    const raw = localStorage.getItem(EPR_CUSTOM_DEPTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(_) { return []; }
+}
+
+function eprSaveCustomDepartments(list) {
+  try { localStorage.setItem(EPR_CUSTOM_DEPTS_KEY, JSON.stringify(list)); }
+  catch(_) {}
+}
+
+function eprAddDepartment(dept) {
+  // dept = { name, manager?, phone?, email?, color, sla? }
+  if (!dept || !dept.name) return null;
+  const name = String(dept.name).trim();
+  if (!name) return null;
+  // Avoid duplicates
+  if (window.eprData.departments.some(d => d.name === name)) return null;
+  const row = {
+    name,
+    color: dept.color || '#0F968C',
+    open: 0,
+    sla: typeof dept.sla === 'number' ? Math.min(100, Math.max(0, dept.sla)) : 100,
+    manager: dept.manager || '',
+    phone: dept.phone || '',
+    email: dept.email || '',
+    custom: true,
+  };
+  const list = eprLoadCustomDepartments();
+  list.push(row);
+  eprSaveCustomDepartments(list);
+  window.eprData.departments.push(row);
+  window.dispatchEvent(new CustomEvent('epr-departments-updated', { detail: window.eprData.departments }));
+  return row;
+}
+
+function eprRemoveDepartment(name) {
+  const list = eprLoadCustomDepartments().filter(d => d.name !== name);
+  eprSaveCustomDepartments(list);
+  window.eprData.departments = window.eprData.departments.filter(d => d.name !== name);
+  window.dispatchEvent(new CustomEvent('epr-departments-updated', { detail: window.eprData.departments }));
+}
+
+// Hydrate at load time
+(function hydrateCustomDepartments() {
+  const stored = eprLoadCustomDepartments();
+  const existing = new Set(window.eprData.departments.map(d => d.name));
+  for (const d of stored) {
+    if (!existing.has(d.name)) window.eprData.departments.push(d);
+  }
+})();
+
+Object.assign(window, { eprAddDepartment, eprRemoveDepartment, eprLoadCustomDepartments });
+
 /* ─────────────────────────── eprApi ─────────────────────────── *
  * Async facade over the mock data — mirrors the shape we'd want
  * when swapping in a real backend (Supabase, REST, GraphQL…).

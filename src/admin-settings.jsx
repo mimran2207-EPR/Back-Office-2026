@@ -82,7 +82,7 @@ function SettingsLayout({ tab, setTab, items, children }) {
 const SET_ITEMS = [
   {id:'general',label:'כללי'},
   {id:'business-calendar',label:'יומן עסקי'},
-  {id:'organization',label:'מבנה ארגוני'},
+  {id:'organization',label:'מחלקות הארגון'},
   {id:'topics',label:'נושאי פנייה'},
   {id:'sla',label:'הגדרות SLA'},
   {id:'forms',label:'טפסי פנייה'},
@@ -103,7 +103,7 @@ function AdminSettingsPage({ initialTab='general' }) {
   const [tab,setTab] = asS(initialTab);
   asE(() => { setTab(initialTab); }, [initialTab]);
   return (<>
-    <PageHeader title={t('הגדרות מערכת')} icon="gear" subtitle={t('קונפיגורציה כוללת של EPR — מבנה ארגוני, SLA, ערוצים, התראות והרשאות')}/>
+    <PageHeader title={t('הגדרות מערכת')} icon="gear" subtitle={t('קונפיגורציה כוללת של EPR — מחלקות, SLA, ערוצים, התראות והרשאות')}/>
     <SettingsLayout tab={tab} setTab={setTab} items={SET_ITEMS}>
       {tab==='general' && <GeneralSettings/>}
       {tab==='business-calendar' && <BusinessCalendarSettings/>}
@@ -227,26 +227,35 @@ function BusinessCalendarSettings() {
 
 // 3. Organization
 function OrganizationSettings() {
-  const d = window.eprData;
   const I = window.EprIcon;
   if (window.useEprLang) window.useEprLang();
   const t = window.eprT || ((s)=>s);
+  // Live-rerender when departments change (someone adds/removes one from
+  // any modal or another tab).
+  const [departments, setDepartments] = asS(()=> window.eprData.departments.slice());
+  asE(()=>{
+    const onUpdate = (e)=> setDepartments((e.detail || window.eprData.departments).slice());
+    window.addEventListener('epr-departments-updated', onUpdate);
+    return ()=> window.removeEventListener('epr-departments-updated', onUpdate);
+  }, []);
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">{t('יחידות ארגוניות')}</div><h3 className="ep-card-title">{t('היררכיית מחלקות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))}><I.plus width={12} height={12}/>{t('מחלקה חדשה')}</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('מחלקות הארגון')}</div><h3 className="ep-card-title">{departments.length} {t('מחלקות')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))}><I.plus width={12} height={12}/>{t('מחלקה חדשה')}</button></div>
       <div style={{display:'flex',flexDirection:'column',gap:10}}>
-        {d.departments.map(dep=>(
+        {departments.map(dep=>(
           <div key={dep.name} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:8}}>
             <div style={{width:6,height:36,background:dep.color,borderRadius:3}}/>
-            <div style={{flex:1}}><b>{dep.name}</b><div className="ep-muted" style={{fontSize:11,marginTop:2}}>{dep.open} {t('פניות פתוחות')} · SLA {dep.sla}%</div></div>
+            <div style={{flex:1}}><b>{dep.name}</b>{dep.custom && <span className="ep-tag green" style={{marginInlineStart:8,fontSize:10}}>{t('חדש')}</span>}<div className="ep-muted" style={{fontSize:11,marginTop:2}}>{dep.open} {t('פניות פתוחות')} · SLA {dep.sla}%</div></div>
             <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(`${t('רשימת הצוותים של')} "${dep.name}"`, 'info')} data-toast="off">{t('צוותים')}</button>
-            <button className="ep-icon-btn" style={{width:30,height:30}} title={t('ערוך')} aria-label={`${t('ערוך')} ${dep.name}`} onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))} data-toast="off"><I.note width={13} height={13}/></button>
+            <button className="ep-icon-btn" style={{width:30,height:30}} title={t('ערוך')} aria-label={`${t('ערוך')} ${dep.name}`} onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'department'}}))} data-toast="off"><I.note width={13} height={13} aria-hidden="true"/></button>
             <button className="ep-icon-btn" style={{width:30,height:30}} title={t('מחק')} aria-label={`${t('מחק')} ${dep.name}`} onClick={async()=>{
               const ok = window.eprConfirm
                 ? await window.eprConfirm({ title:t('מחיקת מחלקה'), message:`"${dep.name}" — ${dep.open} ${t('פניות פתוחות')}`, danger:true, confirmText:t('מחק מחלקה') })
                 : window.confirm(`${t('מחיקה')}: "${dep.name}"?`);
-              if (ok) window.eprToast && window.eprToast(`"${dep.name}" — ${t('נמחקה')}`, 'danger');
-            }} data-toast="off"><I.close width={13} height={13}/></button>
+              if (!ok) return;
+              if (dep.custom && window.eprRemoveDepartment) window.eprRemoveDepartment(dep.name);
+              window.eprToast && window.eprToast(`"${dep.name}" — ${t('נמחקה')}`, 'danger');
+            }} data-toast="off"><I.close width={13} height={13} aria-hidden="true"/></button>
           </div>
         ))}
       </div>
