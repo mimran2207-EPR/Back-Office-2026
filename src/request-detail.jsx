@@ -394,6 +394,30 @@ function Accordion({ icon: Ic, title, badge, defaultOpen, accent='var(--accent)'
 // ── Request info card (form fields, editable-looking) ───────────────────────
 function RequestInfoCard({ row }) {
   const I = window.EprIcon;
+  const [priority, setPriority] = rdS(row.priority);
+  const [clerk, setClerk] = rdS(row.clerk || '');
+  const [assignOpen, setAssignOpen] = rdS(false);
+  const assignRef = rdR(null);
+  const d = window.eprData;
+  const teamMembers = rdM(()=> {
+    const list = (d?.users||[]).filter(u=>u.active).map(u=>u.name);
+    return list.length ? list : ['נועה לביא','אריאל כהן','רון שטרן','דנה כהן','איתן בן-דוד'];
+  }, [d]);
+  rdE(()=>{
+    if (!assignOpen) return;
+    const onDoc = (e)=> { if (assignRef.current && !assignRef.current.contains(e.target)) setAssignOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    return ()=> document.removeEventListener('mousedown', onDoc);
+  }, [assignOpen]);
+  const changePriority = (p)=> {
+    if (p===priority) return;
+    setPriority(p);
+    window.eprToast && window.eprToast(`עדיפות הפנייה ${row.id} שונתה ל"${p}"`, p==='דחוף'?'danger':'success');
+  };
+  const changeClerk = (name)=> {
+    setClerk(name); setAssignOpen(false);
+    window.eprToast && window.eprToast(`הפנייה ${row.id} שובצה ל${name}`, 'success');
+  };
   return (
     <div className="rd-form-grid">
       <div className="rd-fld"><label>נושא הפנייה</label><input value={row.title} readOnly/></div>
@@ -403,17 +427,32 @@ function RequestInfoCard({ row }) {
       <div className="rd-fld"><label>עדיפות</label>
         <div className="rd-pri-select">
           {['רגיל','בינוני','דחוף'].map(p=>(
-            <button key={p} className={`rd-pri-opt ${row.priority===p?'on':''} ${p}`}>
+            <button key={p} className={`rd-pri-opt ${priority===p?'on':''} ${p}`} onClick={()=>changePriority(p)} data-toast="off">
               <span className={`ep-pri-dot ${p}`}/>{p}
             </button>
           ))}
         </div>
       </div>
       <div className="rd-fld"><label>אחראי</label>
-        <div className="rd-assignee">
-          <div className="ep-avatar" style={{width:24,height:24,fontSize:10}}>{(row.clerk||'??').split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
-          <span>{row.clerk||'—'}</span>
-          <I.chevR width={11} height={11} style={{transform:'rotate(-90deg)',color:'var(--muted)',marginInlineStart:'auto'}}/>
+        <div ref={assignRef} style={{position:'relative'}}>
+          <button type="button" className="rd-assignee" onClick={()=>setAssignOpen(o=>!o)} data-toast="off" aria-expanded={assignOpen} aria-haspopup="listbox" style={{width:'100%',textAlign:'inherit',background:'#fff',cursor:'pointer'}}>
+            <div className="ep-avatar" style={{width:24,height:24,fontSize:10}}>{(clerk||'??').split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
+            <span>{clerk||'— ללא שיוך —'}</span>
+            <I.chevR width={11} height={11} style={{transform:`rotate(${assignOpen?'90deg':'-90deg'})`,color:'var(--muted)',marginInlineStart:'auto',transition:'transform .15s'}}/>
+          </button>
+          {assignOpen && (
+            <div role="listbox" style={{position:'absolute',top:'calc(100% + 4px)',insetInlineStart:0,insetInlineEnd:0,zIndex:50,background:'#fff',border:'1px solid var(--border)',borderRadius:8,boxShadow:'0 8px 24px rgba(0,0,0,.12)',maxHeight:220,overflowY:'auto',padding:4}}>
+              {teamMembers.map(name=>(
+                <button key={name} type="button" role="option" aria-selected={clerk===name} data-toast="off"
+                  onClick={()=>changeClerk(name)}
+                  style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',border:'none',background:clerk===name?'rgba(15,150,140,.1)':'transparent',borderRadius:6,cursor:'pointer',fontSize:13,textAlign:'inherit',color:'var(--text)'}}>
+                  <div className="ep-avatar" style={{width:22,height:22,fontSize:10}}>{name.split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
+                  <span style={{flex:1}}>{name}</span>
+                  {clerk===name && <I.check width={12} height={12} style={{color:'var(--accent)'}}/>}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="rd-fld"><label>תאריך יעד (SLA)</label><input value="25.04.26 14:00" readOnly/></div>

@@ -4,6 +4,7 @@ const { useState: pgS, useMemo: pgM } = React;
 // ── Dashboard ───────────────────────────────────────────────────
 function DashboardPage({ openRequest, goPage }) {
   const d = window.eprData; const I = window.EprIcon;
+  const brand = window.useEprBranding ? window.useEprBranding() : {};
   const kpis = [
     { k:'פניות פתוחות', v:d.stats.open.v, delta:d.stats.open.delta, spark:d.stats.open.spark, sub:'מאתמול', tone:'teal', low:false },
     { k:'עמידה ב-SLA', v:d.stats.sla.v+'%', delta:d.stats.sla.delta, spark:d.stats.sla.spark, sub:'שבוע', tone:'green', low:false },
@@ -13,10 +14,10 @@ function DashboardPage({ openRequest, goPage }) {
   return (<>
     <section className="ep-hero">
       <div className="ep-hero-brand">
-        <div className="ep-hero-logo" aria-hidden="true"/>
+        <div className="ep-hero-logo" aria-hidden="true" style={brand.logoDataUrl?{backgroundImage:`url(${brand.logoDataUrl})`,backgroundSize:'contain',backgroundRepeat:'no-repeat',backgroundPosition:'center'}:undefined}/>
         <div className="ep-hero-brand-txt">
-          <div className="ep-hero-brand-name">EPR</div>
-          <div className="ep-hero-brand-sub">הבית הדיגיטלי שלך</div>
+          <div className="ep-hero-brand-name">{brand.appName ? brand.appName.split(' - ')[0].split(' – ')[0] : 'EPR'}</div>
+          <div className="ep-hero-brand-sub">{brand.slogan || 'הבית הדיגיטלי שלך'}</div>
         </div>
       </div>
       <div className="ep-hero-title">
@@ -125,6 +126,9 @@ function RequestsPage({ openRequest, goPage }) {
       </div>
     </div>
     <section className="ep-card">
+      {filtered.length===0 ? (
+        <EmptyState icon="inbox" title="לא נמצאו פניות" hint={q?`לא נמצאו תוצאות עבור "${q}"`:'נסה לשנות את הסינון'} action={(q||dept!=='הכול'||tab!=='all')&&<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>{setQ('');setDept('הכול');setTab('all');}} data-toast="off">נקה סינון</button>}/>
+      ) : (
       <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">מזהה</th><th className="ep-th">פנייה</th><th className="ep-th">מחלקה</th><th className="ep-th">עדיפות</th><th className="ep-th">SLA</th><th className="ep-th">אחראי</th><th className="ep-th">ערוץ</th><th className="ep-th">נוצר</th><th className="ep-th">סטטוס</th></tr></thead><tbody>
         {filtered.map(r=>(
           <tr key={r.id} className="ep-row" onClick={()=>openRequest(r)}>
@@ -140,141 +144,11 @@ function RequestsPage({ openRequest, goPage }) {
           </tr>
         ))}
       </tbody></table></div>
+      )}
     </section>
   </>);
 }
 
-// ── Request Detail (full page) ───────────────────────────────────────
-function RequestDetailPage({ row, goPage, goBack }) {
-  const I = window.EprIcon;
-  if(!row) return <div className="ep-card"><p>לא נבחרה פנייה. <a href="#" onClick={e=>{e.preventDefault();goBack()}}>חזרה</a></p></div>;
-  const tabs=[['details','פרטים'],['timeline','היסטוריה'],['comments','הערות'],['attachments','קבצים'],['related','פניות קשורות']];
-  const [tab,setTab]=pgS('details');
-  return (<>
-    <PageHeader title={row.title} subtitle={<><span className="ep-mono" style={{fontSize:11}}>{row.id}</span> · {row.resident} · נוצר {row.created}</>} icon="inbox"
-      actions={<><button className="ep-btn ep-btn-ghost" onClick={()=>goPage('requests')}>‹ חזרה לרשימה</button><button className="ep-btn ep-btn-ghost"><I.note width={14} height={14}/>הוסף הערה</button><button className="ep-btn ep-btn-primary"><I.send width={14} height={14}/>העברה לטיפול</button></>}/>
-
-    <div className="ep-row-ll">
-      <div style={{display:'flex',flexDirection:'column',gap:18}}>
-        <section className="ep-card">
-          <div className="ep-card-head">
-            <div className="row"><span className="ep-tag">{row.dept}</span><span className="ep-pri"><span className={`ep-pri-dot ${row.priority}`}/>{row.priority}</span><span className={`ep-status ep-status-${row.status}`}>{row.status}</span></div>
-          </div>
-          <div className="ep-tabs" style={{alignSelf:'flex-start'}}>
-            {tabs.map(([v,t])=>(<button key={v} className={tab===v?'active':''} onClick={()=>setTab(v)}>{t}</button>))}
-          </div>
-
-          {tab==='details' && (
-            <div className="ep-detail-grid">
-              <div className="ep-kv"><dt>פונה</dt><dd>{row.resident}</dd></div>
-              <div className="ep-kv"><dt>ערוץ</dt><dd>{row.channel}</dd></div>
-              <div className="ep-kv"><dt>אחראי</dt><dd>{row.clerk}</dd></div>
-              <div className="ep-kv"><dt>נוצר</dt><dd>{row.created}</dd></div>
-              <div className="ep-kv"><dt>מחלקה</dt><dd>{row.dept}</dd></div>
-              <div className="ep-kv"><dt>עדיפות</dt><dd><span className="ep-pri"><span className={`ep-pri-dot ${row.priority}`}/>{row.priority}</span></dd></div>
-              <div className="ep-kv full"><dt>תיאור הפנייה</dt><dd className="ep-muted">פנייה זו נפתחה דרך {row.channel}. תוכן הפנייה במלואו מוצג כאן ביחד עם פרטי המיקום, תאריכים רלוונטיים והגדרות SLA הספציפיות לקטגוריה.</dd></div>
-            </div>
-          )}
-
-          {tab==='timeline' && (
-            <ul className="ep-timeline">
-              {[
-                {t:'נוצרה הפנייה',by:'מערכת',when:row.created,ic:'plus'},
-                {t:'הוקצתה למחלקת '+row.dept,by:'מנתב אוטומטי',when:'+ 2 דק׳',ic:'send'},
-                {t:'שובצה ל-'+(row.clerk==='—'?'ממתין לשיבוץ':row.clerk),by:'נועה לביא',when:'+ 8 דק׳',ic:'users'},
-                {t:'סטטוס עודכן ל״'+row.status+'״',by:row.clerk,when:'+ 1 ש׳',ic:'check'},
-                {t:'הודעת SMS לפונה',by:'מערכת',when:'+ 1 ש׳ 10 דק׳',ic:'msg'},
-              ].map((e,i)=>(
-                <li key={i}>
-                  <div className="ep-tl-dot"/>
-                  <div className="ep-tl-body">
-                    <div><b>{e.t}</b> <span className="ep-muted" style={{fontSize:12}}>· {e.by}</span></div>
-                    <div className="ep-muted" style={{fontSize:11.5}}>{e.when}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {tab==='comments' && (
-            <div style={{display:'flex',flexDirection:'column',gap:14}}>
-              {[{a:'אכ',n:'אריאל כהן',w:'לפני 8 דק׳',c:'נשלח טכנאי שטח, אומדן הגעה 14:30. עדכנתי את הפונה.'},{a:'נל',n:'נועה לביא',w:'לפני 35 דק׳',c:'הועברה למחלקה הרלוונטית, סומן בעדיפות גבוהה.'}].map((c,i)=>(
-                <div key={i} className="ep-comment">
-                  <div className="ep-avatar" style={{width:32,height:32,fontSize:12}}>{c.a}</div>
-                  <div className="ep-comment-body">
-                    <div><b>{c.n}</b> <span className="ep-muted" style={{fontSize:11}}>· {c.w}</span></div>
-                    <p>{c.c}</p>
-                  </div>
-                </div>
-              ))}
-              <div className="ep-comment-form">
-                <textarea placeholder="הוסף הערה פנימית או תגובה לפונה…" rows={3}/>
-                <div className="row" style={{justifyContent:'space-between'}}>
-                  <label className="ep-muted" style={{fontSize:12,display:'flex',alignItems:'center',gap:6}}><input type="checkbox"/>פנימי בלבד</label>
-                  <button className="ep-btn ep-btn-primary ep-btn-sm"><I.send width={12} height={12}/>שלח</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {tab==='attachments' && (
-            <div className="ep-files">
-              {[['IMG_2391.jpg','2.4 MB','תמונה'],['report.pdf','118 KB','דוח'],['signature.png','94 KB','חתימה']].map((f,i)=>(
-                <div key={i} className="ep-file">
-                  <div className="ep-file-ic"><I.doc/></div>
-                  <div style={{flex:1,minWidth:0}}><div style={{fontWeight:500}}>{f[0]}</div><div className="ep-muted" style={{fontSize:11}}>{f[2]} · {f[1]}</div></div>
-                  <button className="ep-icon-btn" style={{width:30,height:30}}><I.download width={14} height={14}/></button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {tab==='related' && (
-            <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">מזהה</th><th className="ep-th">פנייה</th><th className="ep-th">סטטוס</th></tr></thead><tbody>
-              {window.eprData.requests.filter(r=>r.dept===row.dept && r.id!==row.id).slice(0,3).map(r=>(
-                <tr key={r.id} className="ep-row"><td className="ep-mono">{r.id}</td><td>{r.title}</td><td><span className={`ep-status ep-status-${r.status}`}>{r.status}</span></td></tr>
-              ))}
-            </tbody></table></div>
-          )}
-        </section>
-      </div>
-
-      <aside style={{display:'flex',flexDirection:'column',gap:18}}>
-        <section className="ep-card">
-          <div><div className="ep-card-eb">SLA</div><h3 className="ep-card-title">עמידה בזמני טיפול</h3></div>
-          <div style={{textAlign:'center'}}>
-            <div style={{fontSize:42,fontWeight:800,color:row.sla<30?'#B23838':row.sla<60?'#8A5F17':'#2A8C52',letterSpacing:'-.02em'}}>{row.sla}%</div>
-            <div className="ep-muted" style={{fontSize:12}}>{row.slaText}</div>
-          </div>
-          <div className="ep-sla-bar" style={{height:10}}><div className={`ep-sla-fill ${row.sla<30?'low':row.sla<60?'mid':''}`} style={{width:`${row.sla}%`}}/></div>
-        </section>
-
-        <section className="ep-card">
-          <div><div className="ep-card-eb">פעולות מהירות</div></div>
-          <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            <button className="ep-btn ep-btn-ghost" style={{justifyContent:'flex-start'}}><I.users width={14} height={14}/>שיוך לאחראי</button>
-            <button className="ep-btn ep-btn-ghost" style={{justifyContent:'flex-start'}}><I.send width={14} height={14}/>העברה למחלקה אחרת</button>
-            <button className="ep-btn ep-btn-ghost" style={{justifyContent:'flex-start'}}><I.alert width={14} height={14}/>שינוי עדיפות</button>
-            <button className="ep-btn ep-btn-ghost" style={{justifyContent:'flex-start'}}><I.phone width={14} height={14}/>שיחה עם הפונה</button>
-            <button className="ep-btn ep-btn-ghost" style={{justifyContent:'flex-start'}}><I.mail width={14} height={14}/>שלח SMS</button>
-            <button className="ep-btn ep-btn-danger"><I.close width={14} height={14}/>סגירת פנייה</button>
-          </div>
-        </section>
-
-        <section className="ep-card">
-          <div><div className="ep-card-eb">פרופיל פונה</div><h3 className="ep-card-title">{row.resident}</h3></div>
-          <div className="ep-detail-grid">
-            <div className="ep-kv"><dt>פניות בשנה</dt><dd>14</dd></div>
-            <div className="ep-kv"><dt>פתוחות</dt><dd>2</dd></div>
-            <div className="ep-kv full"><dt>טלפון</dt><dd style={{direction:'ltr',textAlign:'end'}}>052-6981025</dd></div>
-            <div className="ep-kv full"><dt>כתובת</dt><dd>ההדרים 12, רעננה</dd></div>
-          </div>
-          <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>goPage('residents')}>פרופיל מלא ‹</button>
-        </section>
-      </aside>
-    </div>
-  </>);
-}
 
 // ── Residents ───────────────────────────────────────────────────
 function ResidentsPage() {
@@ -287,6 +161,9 @@ function ResidentsPage() {
       <button className="ep-btn ep-btn-ghost"><I.filter width={14} height={14}/>מסננים מתקדמים</button>
     </div>
     <section className="ep-card">
+      {filtered.length===0 ? (
+        <EmptyState icon="users" title="לא נמצאו תושבים" hint={q?`לא נמצאו תוצאות עבור "${q}"`:'נסה לשנות את החיפוש'} action={q&&<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>setQ('')} data-toast="off">נקה חיפוש</button>}/>
+      ) : (
       <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">ת״ז</th><th className="ep-th">שם</th><th className="ep-th">אימייל</th><th className="ep-th">טלפון</th><th className="ep-th">כתובת</th><th className="ep-th">פניות פתוחות</th><th className="ep-th">סה״כ</th><th className="ep-th">אימות</th></tr></thead><tbody>
         {filtered.map(r=>(
           <tr key={r.id} className="ep-row">
@@ -301,6 +178,7 @@ function ResidentsPage() {
           </tr>
         ))}
       </tbody></table></div>
+      )}
     </section>
   </>);
 }
@@ -445,10 +323,12 @@ function NotFoundPage({ goPage }) {
 // ── Login / Reset Password ───────────────────────────────────
 function LoginPage({ onLogin }) {
   const I = window.EprIcon;
+  const brand = window.useEprBranding ? window.useEprBranding() : {};
+  const brandName = brand.appName ? brand.appName.split(' - ')[0].split(' – ')[0] : 'EPR Digital';
   return (
     <div className="ep-login">
       <div className="ep-login-hero">
-        <div style={{display:'flex',alignItems:'center',gap:12,zIndex:1}}><div className="ep-logo" style={{background:'rgba(255,255,255,.2)',width:44,height:44,fontSize:20}}>E</div><div><div style={{fontWeight:800,fontSize:20}}>EPR Digital</div><div style={{fontSize:12,opacity:.8}}>בק אופיס עירוני</div></div></div>
+        <div style={{display:'flex',alignItems:'center',gap:12,zIndex:1}}><div className="ep-logo" style={{background:'rgba(255,255,255,.2)',width:44,height:44,fontSize:20,overflow:'hidden'}}>{brand.logoDataUrl?<img src={brand.logoDataUrl} alt="" style={{width:'100%',height:'100%',objectFit:'contain'}}/>:'E'}</div><div><div style={{fontWeight:800,fontSize:20}}>{brandName}</div><div style={{fontSize:12,opacity:.8}}>{brand.slogan || 'בק אופיס עירוני'}</div></div></div>
         <svg viewBox="0 0 400 200" style={{position:'absolute',bottom:0,left:0,width:'100%',opacity:.25}} aria-hidden="true"><g fill="none" stroke="#fff" strokeWidth="1.5"><rect x="20" y="100" width="40" height="90"/><rect x="70" y="70" width="50" height="120"/><rect x="130" y="110" width="40" height="80"/><rect x="180" y="50" width="60" height="140"/><rect x="250" y="100" width="40" height="90"/><rect x="300" y="80" width="50" height="110"/><rect x="360" y="60" width="40" height="130"/><path d="M0 190 L400 190"/></g></svg>
         <div style={{zIndex:1}}><h1 style={{fontSize:32,fontWeight:700,margin:'0 0 12px',letterSpacing:'-.02em'}}>ניהול מוקד השירות של העיר במקום אחד.</h1><p style={{opacity:.9,fontSize:15,maxWidth:'45ch',lineHeight:1.6}}>ריכוז פניות, מעקב SLA, ניהול תושבים, דיוורים וצוותים — בזרימת עבודה מודרנית שמכבדת את הזמן שלכם.</p></div>
         <div style={{zIndex:1,fontSize:12,opacity:.7}}>© 2026 EPR Systems Israel · גרסה 4.2.1</div>
@@ -495,4 +375,4 @@ function RequestDrawer({ row, onClose, onOpenFull }) {
   </>);
 }
 
-Object.assign(window, { DashboardPage, RequestsPage, RequestDetailPage, ResidentsPage, TeamPage, BulkPage, RequestDrawer, LoginPage, PendingPage, InstallPage, NotFoundPage });
+Object.assign(window, { DashboardPage, RequestsPage, ResidentsPage, TeamPage, BulkPage, RequestDrawer, LoginPage, PendingPage, InstallPage, NotFoundPage });

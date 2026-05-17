@@ -221,4 +221,19 @@ function PageHeader({ title, subtitle, actions, icon }) {
   );
 }
 
-Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader });
+function EmptyState({ icon='search', title, hint, action }) {
+  const I = window.EprIcon;
+  const IconComp = (icon && I[icon]) || I.search;
+  return (
+    <div style={{padding:'40px 20px',textAlign:'center',color:'var(--muted)'}}>
+      <div style={{width:48,height:48,borderRadius:12,background:'rgba(15,150,140,.08)',color:'var(--accent)',display:'inline-grid',placeItems:'center',marginBottom:12}}>
+        <IconComp width={22} height={22}/>
+      </div>
+      <div style={{fontSize:14,fontWeight:600,color:'var(--text)',marginBottom:4}}>{title}</div>
+      {hint && <div style={{fontSize:12.5}}>{hint}</div>}
+      {action && <div style={{marginTop:14}}>{action}</div>}
+    </div>
+  );
+}
+
+Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader, useEprBranding, EmptyState });

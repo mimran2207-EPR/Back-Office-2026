@@ -119,24 +119,40 @@ function AdminSettingsPage({ initialTab='general' }) {
   </>);
 }
 
+// Validation helpers
+function eprValidEmail(s) { return !s || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim()); }
+function eprValidPhone(s) { return !s || /^[0-9+\-\s()]{3,18}$/.test(String(s).trim()); }
+function eprValidUrl(s) { try { if(!s) return true; const u = new URL(s); return /^https?:$/.test(u.protocol); } catch(_) { return false; } }
+function FieldError({ children }) {
+  if (!children) return null;
+  return <div role="alert" style={{fontSize:11,color:'var(--red,#B23838)',marginTop:4}}>{children}</div>;
+}
+
 // 1. General
 function GeneralSettings() {
   const [g, setG] = asS(()=> eprLoadStore().general);
   const [dirty, setDirty] = asS(false);
   const set = (k,v) => { setG(prev=>({...prev,[k]:v})); setDirty(true); };
+  const emailErr = !eprValidEmail(g.email) ? 'כתובת אימייל לא תקינה' : null;
+  const phoneErr = !eprValidPhone(g.phone) ? 'מספר טלפון לא תקין' : null;
+  const valid = !emailErr && !phoneErr && g.orgName.trim().length > 0;
   const save = () => {
+    if (!valid) {
+      window.eprToast && window.eprToast('יש לתקן את השדות שמסומנים באדום לפני שמירה', 'danger');
+      return;
+    }
     eprSaveSection('general', g);
     setDirty(false);
     window.eprToast && window.eprToast(`הגדרות "${g.orgName}" נשמרו`, 'success');
   };
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">פרטי הארגון</div><h3 className="ep-card-title">מידע כללי</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty} onClick={save} data-toast="off">{dirty?'שמירה':'נשמר'}</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">פרטי הארגון</div><h3 className="ep-card-title">מידע כללי</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" disabled={!dirty||!valid} onClick={save} data-toast="off">{dirty?'שמירה':'נשמר'}</button></div>
       <div className="ep-detail-grid">
-        <div className="ep-field"><label>שם הארגון</label><input value={g.orgName} onChange={e=>set('orgName',e.target.value)}/></div>
+        <div className="ep-field"><label>שם הארגון</label><input value={g.orgName} onChange={e=>set('orgName',e.target.value)} aria-invalid={!g.orgName.trim()}/>{!g.orgName.trim()&&<FieldError>שם הארגון נדרש</FieldError>}</div>
         <div className="ep-field"><label>מספר ח״פ</label><input value={g.taxId} onChange={e=>set('taxId',e.target.value)}/></div>
-        <div className="ep-field"><label>טלפון מוקד</label><input value={g.phone} onChange={e=>set('phone',e.target.value)} style={{direction:'ltr'}}/></div>
-        <div className="ep-field"><label>אימייל ראשי</label><input value={g.email} onChange={e=>set('email',e.target.value)} style={{direction:'ltr'}}/></div>
+        <div className="ep-field"><label>טלפון מוקד</label><input value={g.phone} onChange={e=>set('phone',e.target.value)} style={{direction:'ltr'}} aria-invalid={!!phoneErr}/><FieldError>{phoneErr}</FieldError></div>
+        <div className="ep-field"><label>אימייל ראשי</label><input value={g.email} onChange={e=>set('email',e.target.value)} style={{direction:'ltr'}} aria-invalid={!!emailErr}/><FieldError>{emailErr}</FieldError></div>
         <div className="ep-field full"><label>כתובת</label><input value={g.address} onChange={e=>set('address',e.target.value)}/></div>
         <div className="ep-field"><label>אזור זמן</label><select value={g.tz} onChange={e=>set('tz',e.target.value)}><option>Asia/Jerusalem</option><option>UTC</option></select></div>
         <div className="ep-field"><label>שפת ברירת מחדל</label><select value={g.lang} onChange={e=>set('lang',e.target.value)}><option value="he">עברית</option><option value="ar">العربية</option><option value="en">English</option><option value="ru">Русский</option></select></div>
@@ -612,6 +628,9 @@ function UsersPage() {
       <div className="end"><div className="ep-input-wrap"><I.search width={14} height={14}/><input placeholder="חיפוש משתמש…" value={q} onChange={e=>setQ(e.target.value)}/></div></div>
     </div>
     <section className="ep-card">
+      {filtered.length===0 ? (
+        <window.EmptyState icon="users" title={tab==='pending'?'אין משתמשים שממתינים לאישור':'לא נמצאו משתמשים'} hint={q?`לא נמצאו תוצאות עבור "${q}"`:'הכל בסדר כאן'} action={q&&<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>setQ('')} data-toast="off">נקה חיפוש</button>}/>
+      ) : (
       <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">שם</th><th className="ep-th">תפקיד</th><th className="ep-th">מחלקה</th><th className="ep-th">אימייל</th><th className="ep-th">כניסה אחרונה</th><th className="ep-th">פניות</th><th className="ep-th">SLA</th><th className="ep-th">סטטוס</th><th className="ep-th"></th></tr></thead><tbody>
         {filtered.map(u=>(
           <tr key={u.email} className="ep-row">
@@ -627,6 +646,7 @@ function UsersPage() {
           </tr>
         ))}
       </tbody></table></div>
+      )}
     </section>
   </>);
 }

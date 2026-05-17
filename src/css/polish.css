@@ -443,3 +443,57 @@ button:focus-visible, a:focus-visible {
   0%   { transform: scale(.8); opacity: .6; }
   100% { transform: scale(1.6); opacity: 0; }
 }
+
+/* ─────────────────────────────────────────────────────────
+ * Responsive layer — tablet & mobile fallbacks.
+ * Keeps desktop layout untouched; activates below 1024px.
+ * ───────────────────────────────────────────────────────── */
+@media (max-width: 1280px) {
+  .ep-app { min-width: 0; }
+  .ep-content { padding: 18px 20px; }
+}
+
+@media (max-width: 1024px) {
+  .ep-sb { width: 64px; }
+  .ep-sb .ep-nav-lbl,
+  .ep-sb .ep-brand-txt,
+  .ep-sb .ep-sb-sect,
+  .ep-sb .ep-sb-user-txt,
+  .ep-sb .ep-nav-badge,
+  .ep-sb .ep-nav-chev,
+  .ep-sb .ep-nav-children { display: none; }
+  .ep-content { padding: 16px; }
+  .ep-row2, .ep-row3, .ep-row-ll { grid-template-columns: 1fr !important; }
+  .ep-kpis { grid-template-columns: repeat(2, 1fr) !important; }
+  .ep-search { max-width: 100%; }
+  .ep-search span:not(.ep-ai-pill) { font-size: 12px; }
+  .ep-hero { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+@media (max-width: 720px) {
+  .ep-sb { position: fixed; inset-inline-start: 0; top: 0; bottom: 0; z-index: 40; }
+  .ep-main { margin-inline-start: 64px; }
+  .ep-top { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+  .ep-search { order: 3; flex: 1 1 100%; }
+  .ep-content { padding: 12px; }
+  .ep-kpis { grid-template-columns: 1fr !important; }
+  .ep-ph { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .ep-ph-actions { width: 100%; flex-wrap: wrap; }
+  .ep-table { font-size: 12.5px; }
+  .ep-table-wrap { overflow-x: auto; }
+  .ep-modal { width: calc(100vw - 24px); max-width: none; }
+  .ep-drawer { width: min(96vw, 480px); }
+  .ep-detail-grid { grid-template-columns: 1fr !important; }
+  .ep-login { grid-template-columns: 1fr !important; }
+  .ep-login-hero { min-height: 220px; padding: 30px !important; }
+  .ep-login-form { padding: 30px 20px !important; }
+}
+
+@media (max-width: 480px) {
+  .ep-tabs { flex-wrap: wrap; }
+  .ep-toasts { left: 12px; right: 12px; inset-inline-start: 12px; inset-inline-end: 12px; }
+  .ep-toast { max-width: 100%; }
+}
+
+/* Hide scroll on body when modal is open is handled by JS; ensure modal scrolls */
+.ep-modal-body { max-height: 75vh; overflow-y: auto; }
