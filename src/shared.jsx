@@ -11,6 +11,7 @@ function Sparkline({ data, tone='teal', h=36, w=120 }) {
 }
 
 // ── Sidebar v2: nested groups matching the actual eprdigital routes ──
+// Labels are kept in Hebrew (canonical) and translated at render time via eprT().
 const NAV_GROUPS = [
   { id:'dashboard', icon:'home', label:'תמונת מצב' },
   {
@@ -63,6 +64,17 @@ function useEprBranding() {
   return b;
 }
 
+// ── Language (re-render trigger when settings.general.lang changes) ──
+function useEprLang() {
+  const [lang, setLang] = vS(()=> (window.eprCurrentLang ? window.eprCurrentLang() : 'he'));
+  vE(()=>{
+    const onUpdate = (e)=> setLang(e.detail || (window.eprCurrentLang ? window.eprCurrentLang() : 'he'));
+    window.addEventListener('epr-lang-updated', onUpdate);
+    return ()=> window.removeEventListener('epr-lang-updated', onUpdate);
+  }, []);
+  return lang;
+}
+
 // ── Theme (light / dark) ────────────────────────────────────────
 function readEprTheme() {
   try { return localStorage.getItem('epr-theme') || 'light'; } catch(_) { return 'light'; }
@@ -82,6 +94,8 @@ function Sidebar({ page, setPage }) {
   const I = window.EprIcon;
   const brand = useEprBranding();
   const [theme, setTheme] = useEprTheme();
+  useEprLang();
+  const t = window.eprT || ((s)=>s);
   const [collapsed, setCollapsed] = vS(()=> {
     try { return localStorage.getItem('epr-sb-collapsed') === '1'; } catch(_) { return false; }
   });
@@ -121,30 +135,31 @@ function Sidebar({ page, setPage }) {
           </svg>
         </button>
       </div>
-      <div className="ep-sb-sect">ניווט</div>
+      <div className="ep-sb-sect">{t('ניווט')}</div>
       <nav className="ep-nav">
         {NAV_GROUPS.map(g=>{
           const hasChildren = !!g.children?.length;
           const groupActive = isActive(g.id) || g.children?.some(c=>page===c.id);
           const isOpen = open[g.id] ?? groupActive;
+          const lbl = t(g.label);
           return (
             <div key={g.id}>
               {hasChildren ? (
-                <a href="#" className={groupActive?'active':''} title={collapsed?g.label:undefined}
+                <a href="#" className={groupActive?'active':''} title={collapsed?lbl:undefined}
                    onClick={e=>{e.preventDefault();
                      if(collapsed){ setCollapsed(false); setOpen({...open,[g.id]:true}); }
                      else setOpen({...open,[g.id]:!isOpen});
                    }}>
                   <span className="ep-nav-ic">{I[g.icon]?React.createElement(I[g.icon]):null}</span>
-                  <span className="ep-nav-lbl">{g.label}</span>
+                  <span className="ep-nav-lbl">{lbl}</span>
                   {g.badge!=null && <span className="ep-nav-badge">{g.badge.toLocaleString('he-IL')}</span>}
                   <span className={`ep-nav-chev ${isOpen?'open':''}`} aria-hidden="true"><I.chevD width={12} height={12}/></span>
                 </a>
               ) : (
-                <a href="#" className={isActive(g.id)?'active':''} title={collapsed?g.label:undefined}
+                <a href="#" className={isActive(g.id)?'active':''} title={collapsed?lbl:undefined}
                    onClick={e=>{e.preventDefault();setPage(g.id)}}>
                   <span className="ep-nav-ic">{I[g.icon]?React.createElement(I[g.icon]):null}</span>
-                  <span className="ep-nav-lbl">{g.label}</span>
+                  <span className="ep-nav-lbl">{lbl}</span>
                   {g.badge!=null && <span className="ep-nav-badge">{g.badge.toLocaleString('he-IL')}</span>}
                 </a>
               )}
@@ -155,7 +170,7 @@ function Sidebar({ page, setPage }) {
                       {c.icon && I[c.icon] && <span className="ep-nav-ic">{React.createElement(I[c.icon])}</span>}
                       {c.icon && !I[c.icon] && <span className="ep-nav-bullet"/>}
                       {!c.icon && <span className="ep-nav-bullet"/>}
-                      <span className="ep-nav-lbl">{c.label}</span>
+                      <span className="ep-nav-lbl">{t(c.label)}</span>
                     </a>
                   ))}
                 </div>
@@ -190,33 +205,35 @@ function Sidebar({ page, setPage }) {
 
 function TopBar({ crumbs, onSearch, goPage }) {
   const I = window.EprIcon;
+  useEprLang();
+  const t = window.eprT || ((s)=>s);
   return (
     <header className="ep-top">
       <div className="ep-crumbs">
-        <a href="#dashboard" className="ep-crumb-link" onClick={e=>{e.preventDefault();goPage&&goPage('dashboard')}}>בק אופיס</a>
+        <a href="#dashboard" className="ep-crumb-link" onClick={e=>{e.preventDefault();goPage&&goPage('dashboard')}}>{t('בק אופיס')}</a>
         {crumbs.map((c,i)=>{
           const isLast = i===crumbs.length-1;
-          // intermediate crumbs navigate to known parents
           let target = null;
           if(!isLast){
             if(c==='הגדרות') target = 'settings/general';
             else if(c==='ניהול פניות') target = 'requests';
           }
+          const label = t(c);
           return (
             <React.Fragment key={i}>
               <I.chevL width={12} height={12}/>
               {isLast
-                ? <b>{c}</b>
-                : <a href="#" className="ep-crumb-link" onClick={e=>{e.preventDefault();target&&goPage&&goPage(target)}}>{c}</a>}
+                ? <b>{label}</b>
+                : <a href="#" className="ep-crumb-link" onClick={e=>{e.preventDefault();target&&goPage&&goPage(target)}}>{label}</a>}
             </React.Fragment>
           );
         })}
       </div>
       <button className="ep-search" style={{marginInlineStart:20}} data-toast="off"
         onClick={()=>window.dispatchEvent(new Event('open-ai-search'))}
-        title="חיפוש חכם עם AI · ⌘K">
+        title="⌘K">
         <I.search width={16} height={16}/>
-        <span>חפש תושב, פנייה או רחוב · או שאל את ה-AI…</span>
+        <span>{t('חפש תושב, פנייה או רחוב · או שאל את ה-AI…')}</span>
         <span className="ep-ai-pill">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3zm7 11l.9 2.7 2.7.9-2.7.9-.9 2.7-.9-2.7-2.7-.9 2.7-.9.9-2.7z"/>
@@ -226,9 +243,9 @@ function TopBar({ crumbs, onSearch, goPage }) {
         <kbd className="ep-kbd">⌘K</kbd>
       </button>
       <div className="ep-top-right">
-        <button className="ep-icon-btn" title="ממתינים לאישור"><I.shield/><span className="ep-dot" style={{background:'var(--amber)'}}/></button>
-        <button className="ep-icon-btn" title="יומן"><I.calendar/></button>
-        <button className="ep-icon-btn" title="התראות"><I.bell/><span className="ep-dot"/></button>
+        <button className="ep-icon-btn" title={t('ממתינים לאישור')}><I.shield/><span className="ep-dot" style={{background:'var(--amber)'}}/></button>
+        <button className="ep-icon-btn" title={t('יומן')}><I.calendar/></button>
+        <button className="ep-icon-btn" title={t('התראות')}><I.bell/><span className="ep-dot"/></button>
       </div>
     </header>
   );
@@ -262,4 +279,4 @@ function EmptyState({ icon='search', title, hint, action }) {
   );
 }
 
-Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader, useEprBranding, useEprTheme, EmptyState });
+Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader, useEprBranding, useEprTheme, useEprLang, EmptyState });

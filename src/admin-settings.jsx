@@ -143,6 +143,8 @@ function GeneralSettings() {
     }
     eprSaveSection('general', g);
     setDirty(false);
+    if (window.eprApplyLang) window.eprApplyLang(g.lang);
+    window.dispatchEvent(new CustomEvent('epr-lang-updated', { detail: g.lang }));
     window.eprToast && window.eprToast(`הגדרות "${g.orgName}" נשמרו`, 'success');
   };
   return (<>
