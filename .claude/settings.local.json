@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git ls-tree *)",
+      "Bash(ls -la \"C:/Users/yehudam/Downloads/_ _/Back-Office-2026/src/\")",
+      "Bash(node -e ' *)",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(awk 'NR<147 || NR>277' src/pages.jsx)",
+      "Read(//tmp/**)",
+      "Bash(git commit -m ' *)",
+      "Bash(gh pr create --base claude/laughing-banzai-bbe058 --head claude/polish-round-2 --title 'Polish 2: ניקוי קוד, רספונסיביות, popovers ולידציה ו-empty states' --body ' *)"
+    ]
+  }
+}

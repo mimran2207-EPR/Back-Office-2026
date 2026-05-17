@@ -392,10 +392,28 @@ function Accordion({ icon: Ic, title, badge, defaultOpen, accent='var(--accent)'
 }
 
 // ── Request info card (form fields, editable-looking) ───────────────────────
+// ── Request overrides store (priority / assignee per request) ─────
+const RD_OVERRIDES_KEY = 'epr-req-overrides';
+function rdLoadOverride(reqId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(RD_OVERRIDES_KEY) || '{}');
+    return all[reqId] || {};
+  } catch(_) { return {}; }
+}
+function rdSaveOverride(reqId, patch) {
+  try {
+    const all = JSON.parse(localStorage.getItem(RD_OVERRIDES_KEY) || '{}');
+    all[reqId] = {...(all[reqId]||{}), ...patch, updatedAt: new Date().toISOString()};
+    localStorage.setItem(RD_OVERRIDES_KEY, JSON.stringify(all));
+    return true;
+  } catch(_) { return false; }
+}
+
 function RequestInfoCard({ row }) {
   const I = window.EprIcon;
-  const [priority, setPriority] = rdS(row.priority);
-  const [clerk, setClerk] = rdS(row.clerk || '');
+  const override = rdLoadOverride(row.id);
+  const [priority, setPriority] = rdS(override.priority || row.priority);
+  const [clerk, setClerk] = rdS(override.clerk ?? (row.clerk || ''));
   const [assignOpen, setAssignOpen] = rdS(false);
   const assignRef = rdR(null);
   const d = window.eprData;
@@ -412,11 +430,13 @@ function RequestInfoCard({ row }) {
   const changePriority = (p)=> {
     if (p===priority) return;
     setPriority(p);
-    window.eprToast && window.eprToast(`עדיפות הפנייה ${row.id} שונתה ל"${p}"`, p==='דחוף'?'danger':'success');
+    rdSaveOverride(row.id, { priority: p });
+    window.eprToast && window.eprToast(`עדיפות הפנייה ${row.id} שונתה ל"${p}" · נשמר`, p==='דחוף'?'danger':'success');
   };
   const changeClerk = (name)=> {
     setClerk(name); setAssignOpen(false);
-    window.eprToast && window.eprToast(`הפנייה ${row.id} שובצה ל${name}`, 'success');
+    rdSaveOverride(row.id, { clerk: name });
+    window.eprToast && window.eprToast(`הפנייה ${row.id} שובצה ל${name} · נשמר`, 'success');
   };
   return (
     <div className="rd-form-grid">
