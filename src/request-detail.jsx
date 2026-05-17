@@ -953,6 +953,14 @@ function NewRequestModal() {
   const d = window.eprData;
   if (window.useEprLang) window.useEprLang();
   const T = window.eprT || ((s)=>s);
+  // Departments may grow at runtime (Organization settings → "מחלקה חדשה").
+  // Force a re-render when the list changes so the dropdown picks up the new row.
+  const [, setBump] = rdS(0);
+  rdE(()=>{
+    const onUpdate = ()=> setBump(n=>n+1);
+    window.addEventListener('epr-departments-updated', onUpdate);
+    return ()=> window.removeEventListener('epr-departments-updated', onUpdate);
+  }, []);
   const [open, setOpen] = rdS(false);
   const [step, setStep] = rdS(1);
   const [form, setForm] = rdS({ resident:'', phone:'', dept:'', subject:'', desc:'', priority:'רגיל', channel:'מוקד 106', sla:'25.04.26' });

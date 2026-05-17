@@ -31,7 +31,7 @@ const NAV_GROUPS = [
     children:[
       { id:'settings/general',           label:'כללי',              icon:'gear' },
       { id:'settings/business-calendar', label:'יומן עסקי',          icon:'calendar' },
-      { id:'settings/organization',      label:'מבנה ארגוני',       icon:'building' },
+      { id:'settings/organization',      label:'מחלקות הארגון',     icon:'building' },
       { id:'settings/topics',            label:'נושאי פנייה',       icon:'inbox' },
       { id:'settings/sla',               label:'זמני SLA',          icon:'clock' },
       { id:'settings/forms',             label:'טפסי פנייה',        icon:'doc' },

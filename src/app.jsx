@@ -79,7 +79,7 @@ function EprApp() {
 const VALID = ['dashboard','requests','request-detail','residents','team','bulk','users','saved-reports','my-reports','install','settings','login','reset-password','pending','accessibility-statement'];
 function validRoute(p) { return VALID.includes(p) || p.startsWith('settings/'); }
 function settingLabel(p) {
-  const map = {'general':'כללי','business-calendar':'יומן עסקי','organization':'מבנה ארגוני','topics':'נושאי פנייה','sla':'זמני SLA','forms':'טפסי פנייה','channels':'ערוצי כניסה','auto-routing':'ניתוב אוטומטי','templates':'תבניות הודעה','integrations':'אינטגרציות','security':'אבטחה והרשאות','notifications':'התראות','branding':'מיתוג ופורטל','audit':'יומן ביקורת'};
+  const map = {'general':'כללי','business-calendar':'יומן עסקי','organization':'מחלקות הארגון','topics':'נושאי פנייה','sla':'זמני SLA','forms':'טפסי פנייה','channels':'ערוצי כניסה','auto-routing':'ניתוב אוטומטי','templates':'תבניות הודעה','integrations':'אינטגרציות','security':'אבטחה והרשאות','notifications':'התראות','branding':'מיתוג ופורטל','audit':'יומן ביקורת'};
   return map[p.slice(9)] || 'הגדרות';
 }
 
