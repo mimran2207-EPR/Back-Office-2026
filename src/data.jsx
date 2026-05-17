@@ -1,4 +1,63 @@
 // epr/data.jsx — Mock data aligned with eprdigital schemas (requests, residents, teams, SLA, etc.)
+
+/**
+ * @typedef {'דחוף'|'גבוה'|'בינוני'|'רגיל'|'נמוך'} EprPriority
+ * @typedef {'חדש'|'בטיפול'|'מחכה למסמכים'|'בדיקת מסמכים'|'ממתין לאישור'|'הועבר'|'פתוח'|'מאושר'|'נדחה'|'מוקפא'|'חיצוני'} EprStatus
+ *
+ * @typedef {Object} EprRequest
+ * @property {string}      id        Stable identifier (e.g. "REQ-24193")
+ * @property {string}      title     Short human-readable subject
+ * @property {string}      resident  Name (or anonymized label) of the requester
+ * @property {string}      dept      Department name
+ * @property {string}      clerk     Assignee initials or full name; "—" if unassigned
+ * @property {EprStatus}   status
+ * @property {EprPriority} priority
+ * @property {number}      sla       0–100 — % of SLA window remaining
+ * @property {string}      slaText   Human label for the SLA bar (e.g. "18 דק׳ לפקיעה")
+ * @property {string}      created   Display string for creation timestamp
+ * @property {string}      channel   "אפליקציה" | "מוקד 106" | "טלפון" | "אתר" | "SMS" | "Email" | "וואטסאפ"
+ *
+ * @typedef {Object} EprResident
+ * @property {string} id, name, email, phone, addr
+ * @property {number} open       Currently-open requests for this resident
+ * @property {number} total      Lifetime request count
+ * @property {boolean} verified
+ *
+ * @typedef {Object} EprUser
+ * @property {string} name, email, role, dept, last, avatar
+ * @property {number} handled    Requests handled in the period
+ * @property {number} sla        SLA % achieved (0 if N/A)
+ * @property {boolean} active    false = pending approval
+ *
+ * @typedef {Object} EprDepartment
+ * @property {string} name, color
+ * @property {number} open       Open requests
+ * @property {number} sla        SLA % (0–100)
+ *
+ * @typedef {Object} EprTeam
+ * @property {string} name, lead
+ * @property {number} size, load, sla
+ *
+ * @typedef {Object} EprCampaign
+ * @property {string} name, audience, status, date
+ * @property {number} sent, opened, ctr
+ *
+ * @typedef {Object} EprActivity
+ * @property {string} t, who, txt, icon
+ *
+ * @typedef {Object} EprData
+ * @property {{name:string,role:string,dept:string,avatar:string,email:string}} me
+ * @property {Object<string, {v:number|string, delta:number, spark:number[], unit?:string}>} stats
+ * @property {EprRequest[]}    requests
+ * @property {EprResident[]}   residents
+ * @property {EprUser[]}       users
+ * @property {EprDepartment[]} departments
+ * @property {EprTeam[]}       teams
+ * @property {EprCampaign[]}   campaigns
+ * @property {EprActivity[]}   activity
+ */
+
+/** @type {EprData} */
 const eprData = {
   me: { name: 'מיכל עמרן', role: 'מנהלת בק אופיס', dept: 'מוקד ושירות', avatar: 'מע', email: 'michal@epr-muni.co.il' },
   stats: {
