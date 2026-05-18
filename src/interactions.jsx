@@ -766,8 +766,11 @@ function EntityCreateModal() {
         else if(f.type==='color') init[f.k] = '#0F968C';
         else init[f.k] = '';
       });
+      // Merge optional prefill values (e.g. campaign audience auto-filled from
+      // ResidentsPage bulk-select)
+      if (e.detail && e.detail.prefill) Object.assign(init, e.detail.prefill);
       setData(init);
-      setConfig({ kind, schema });
+      setConfig({ kind, schema, audienceIds: e.detail && e.detail.audienceIds, audiencePreview: e.detail && e.detail.audiencePreview });
     };
     window.addEventListener('open-create-entity', h);
     return ()=> window.removeEventListener('open-create-entity', h);
@@ -794,6 +797,16 @@ function EntityCreateModal() {
         verified: !!data.verified,
       });
     }
+    if (config.kind === 'campaign' && window.eprAddCampaign) {
+      const audienceIds = config.audienceIds;
+      window.eprAddCampaign({
+        name, channel: data.channel, schedule: data.schedule,
+        message: data.message,
+        audience: audienceIds && audienceIds.length
+          ? { ids: audienceIds, label: t('תושבים נבחרים') }
+          : (data.audience || 'כל התושבים'),
+      });
+    }
     close();
     window.eprToast && window.eprToast(`${config.schema.toast}: "${name||'פריט חדש'}"`, 'success');
   };
@@ -807,6 +820,20 @@ function EntityCreateModal() {
           <button className="ep-icon-btn" onClick={close} data-toast="off" aria-label={t('סגור')}><I.close/></button>
         </header>
         <div className="ep-modal-body">
+          {config.kind === 'campaign' && config.audienceIds && config.audienceIds.length > 0 && (
+            <div className="ep-callout" style={{marginBottom:12, background:'rgba(15,150,140,.08)', borderColor:'var(--accent)'}}>
+              <I.users width={18} height={18}/>
+              <div>
+                <b>{t('קהל יעד מותאם')}: {config.audienceIds.length} {t('תושבים')}</b>
+                {config.audiencePreview && config.audiencePreview.length > 0 && (
+                  <div style={{fontSize:12, color:'var(--muted)', marginTop:4}}>
+                    {config.audiencePreview.slice(0,3).join(', ')}
+                    {config.audienceIds.length > 3 && ` ${t('ועוד')} ${config.audienceIds.length - 3}`}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div className="ep-detail-grid">
             {config.schema.fields.map(f=>{
               const full = f.type==='textarea' || f.type==='help';
