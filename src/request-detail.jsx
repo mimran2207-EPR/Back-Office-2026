@@ -146,7 +146,15 @@ function StepperActions({ row, canAct, onApprove, onReject, onReturn, onCancel, 
             ? <><span className="rd-state-dot ok"/>הפנייה אושרה — נסגרה ב-22.04 14:10</>
             : <><span className="rd-state-dot bad"/>הפנייה נדחתה — נסגרה ב-22.04 14:10</>}
         </div>
-        <button className="ep-btn ep-btn-ghost ep-btn-sm"><I.send width={12} height={12}/>פתח מחדש</button>
+        <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={async()=>{
+          const t = window.eprT || ((s)=>s);
+          const ok = window.eprConfirm
+            ? await window.eprConfirm({ title:t('פתח מחדש'), message:`${row.id} ${t('שונתה ל')} ${t('בטיפול')}`, confirmText:t('פתח מחדש') })
+            : window.confirm(t('פתח מחדש') + '?');
+          if (!ok) return;
+          if (window.rdSaveOverride) window.rdSaveOverride(row.id, { status:'בטיפול' });
+          window.eprToast && window.eprToast(`${row.id} — ${t('פתח מחדש')}`, 'success');
+        }} data-toast="off"><I.send width={12} height={12}/>פתח מחדש</button>
       </div>
     );
   }
@@ -1098,4 +1106,4 @@ function NewRequestModal() {
   );
 }
 
-Object.assign(window, { RequestDetailPageV3, NewRequestModal });
+Object.assign(window, { RequestDetailPageV3, NewRequestModal, rdSaveOverride, rdLoadOverride });

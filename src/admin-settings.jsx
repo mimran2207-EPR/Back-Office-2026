@@ -648,7 +648,7 @@ function AuditSettings() {
   const colors={login:'#3D7BC8',edit:'#0F968C',create:'#5B945C',alert:'#E15454',add:'#7A6BD8',export:'#D4793A',delete:'#B23838'};
   return (<>
     <div className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">{tt('יומן ביקורת')}</div><h3 className="ep-card-title">{tt('פעילות היום במערכת')} · 247 {tt('אירוע')}</h3></div><div className="row"><button className="ep-btn ep-btn-ghost ep-btn-sm"><I.filter width={12} height={12}/>{tt('סינון')}</button><button className="ep-btn ep-btn-ghost ep-btn-sm"><I.download width={12} height={12}/>{tt('ייצוא')}</button></div></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{tt('יומן ביקורת')}</div><h3 className="ep-card-title">{tt('פעילות היום במערכת')} · 247 {tt('אירוע')}</h3></div><div className="row"><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(tt('סינון') + ' — בקרוב', 'info')} data-toast="off"><I.filter width={12} height={12}/>{tt('סינון')}</button><button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>window.eprExportCSV && window.eprExportCSV('audit-log', events, [{k:'t',label:'שעה'},{k:'u',label:'משתמש'},{k:'a',label:'פעולה'},{k:'d',label:'פרטים'}])} data-toast="off"><I.download width={12} height={12}/>{tt('ייצוא')}</button></div></div>
       <table className="ep-table"><thead><tr><th className="ep-th">{tt('שעה')}</th><th className="ep-th">{tt('משתמש')}</th><th className="ep-th">{tt('פעולה')}</th><th className="ep-th">{tt('פרטים')}</th></tr></thead>
         <tbody>{events.map((e,i)=>(<tr key={i}><td className="ep-mono">{e.t}</td><td>{e.u}</td><td><span className="ep-tag" style={{background:colors[e.k]+'18',color:colors[e.k]}}>{e.a}</span></td><td className="ep-muted" style={{fontSize:12.5}}>{e.d}</td></tr>))}</tbody>
       </table>
@@ -707,7 +707,7 @@ function UsersPage() {
     : d.users.filter(u=>u.active && visible(u));
   const filtered = q ? list.filter(u=>u.name.includes(q)||u.email.includes(q)) : list;
   return (<>
-    <PageHeader title={t('ניהול משתמשים')} icon="users" subtitle={`${d.users.filter(u=>u.active).length} ${t('פעילים')} · ${d.users.filter(u=>!u.active).length} ${t('ממתינים לאישור')}`} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('ייצוא')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'user'}}))}><I.plus width={14} height={14}/>{t('משתמש חדש')}</button></>}/>
+    <PageHeader title={t('ניהול משתמשים')} icon="users" subtitle={`${d.users.filter(u=>u.active).length} ${t('פעילים')} · ${d.users.filter(u=>!u.active).length} ${t('ממתינים לאישור')}`} actions={<><button className="ep-btn ep-btn-ghost" onClick={()=>window.eprExportCSV && window.eprExportCSV('users', d.users, [{k:'name',label:'שם'},{k:'role',label:'תפקיד'},{k:'dept',label:'מחלקה'},{k:'email',label:'אימייל'},{k:'last',label:'כניסה אחרונה'},{k:'handled',label:'פניות'},{k:'sla',label:'SLA'},{k:'active',label:'פעיל'}])} data-toast="off"><I.download width={14} height={14}/>{t('ייצוא')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'user'}}))} data-toast="off"><I.plus width={14} height={14}/>{t('משתמש חדש')}</button></>}/>
     <div className="row">
       <div className="ep-tabs">
         <button className={tab==='active'?'active':''} onClick={()=>setTab('active')}>{t('פעילים')} ({d.users.filter(u=>u.active).length})</button>
@@ -756,7 +756,7 @@ function SavedReportsPage() {
     {n:'אסקלציות פעילות',cat:'SLA',owner:'מיכל כהן',shared:9,run:218,upd:'היום'},
   ];
   return (<>
-    <PageHeader title={t('דוחות שמורים')} icon="chart" subtitle={t('ספריית דוחות מוכנים שמשותפים על פני המערכת')} actions={<><button className="ep-btn ep-btn-ghost"><I.filter width={14} height={14}/>{t('קטגוריה')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))}><I.plus width={14} height={14}/>{t('דוח חדש')}</button></>}/>
+    <PageHeader title={t('דוחות שמורים')} icon="chart" subtitle={t('ספריית דוחות מוכנים שמשותפים על פני המערכת')} actions={<><button className="ep-btn ep-btn-ghost" onClick={()=>window.eprToast && window.eprToast(t('סינון לפי קטגוריה') + ' — בקרוב', 'info')} data-toast="off"><I.filter width={14} height={14}/>{t('קטגוריה')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))} data-toast="off"><I.plus width={14} height={14}/>{t('דוח חדש')}</button></>}/>
     <section className="ep-card">
       <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">{t('שם הדוח')}</th><th className="ep-th">{t('קטגוריה')}</th><th className="ep-th">{t('בעלים')}</th><th className="ep-th">{t('משותף ל-')}</th><th className="ep-th">{t('הופעל (חודש)')}</th><th className="ep-th">{t('עודכן')}</th><th className="ep-th"></th></tr></thead><tbody>
         {reports.map(r=>(
@@ -787,7 +787,7 @@ function MyReportsPage() {
     {n:'פניות חורגות בצוות שלי',type:'אישי',run:84,sched:'יומי 16:00',upd:'היום'},
   ];
   return (<>
-    <PageHeader title={t('הדוחות שלי')} icon="chart" subtitle={t('דוחות אישיים, תזמונים והתראות שיצרת')} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('ייצוא')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))}><I.plus width={14} height={14}/>{t('דוח חדש')}</button></>}/>
+    <PageHeader title={t('הדוחות שלי')} icon="chart" subtitle={t('דוחות אישיים, תזמונים והתראות שיצרת')} actions={<><button className="ep-btn ep-btn-ghost" onClick={()=>window.eprExportCSV && window.eprExportCSV('my-reports', reports, [{k:'n',label:'שם'},{k:'type',label:'סוג'},{k:'sched',label:'תזמון'},{k:'run',label:'הפעלות'},{k:'upd',label:'עודכן'}])} data-toast="off"><I.download width={14} height={14}/>{t('ייצוא')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-report-builder'))} data-toast="off"><I.plus width={14} height={14}/>{t('דוח חדש')}</button></>}/>
     <div className="ep-kpis">
       {[['דוחות פעילים','12','+3'],['מתוזמנים','5','+1'],['התראות פעילות','8','-1'],['הפעלות החודש','278','+42']].map(([k,v,dlt],i)=>(<div key={i} className="ep-kpi"><div className="ep-kpi-head"><span className="ep-kpi-lbl">{t(k)}</span><span className={`ep-delta ${dlt.startsWith('-')?'dn':'up'}`}>{dlt}</span></div><div className="ep-kpi-val">{v}</div></div>))}
     </div>

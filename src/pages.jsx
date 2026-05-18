@@ -124,7 +124,7 @@ function RequestsPage({ openRequest, goPage }) {
   const filtered=pgM(()=>{let o=d.requests; if(tab==='open') o=o.filter(r=>!['מאושר','חיצוני'].includes(r.status)); if(tab==='urgent') o=o.filter(r=>r.priority==='דחוף'); if(tab==='overdue') o=o.filter(r=>r.sla<40); if(dept!=='הכול') o=o.filter(r=>r.dept===dept); if(q) o=o.filter(r=>r.title.includes(q)||r.id.includes(q)||r.resident.includes(q)); return o;},[tab,q,dept]);
   return (<>
     <PageHeader title={t('ניהול פניות')} subtitle={`${d.requests.length} ${t('פניות')} · ${d.requests.filter(r=>r.priority==='דחוף').length} ${t('דחופות')} · ${d.requests.filter(r=>r.sla<40).length} ${t('חורגות SLA')}`} icon="inbox"
-      actions={<><button className="ep-btn ep-btn-ghost" onClick={()=>goPage('my-reports')}><I.chart width={14} height={14}/>{t('דוחות שמורים')}</button><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('ייצוא Excel')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-new-request'))}><I.plus width={14} height={14}/>{t('פנייה חדשה')}</button></>}/>
+      actions={<><button className="ep-btn ep-btn-ghost" onClick={()=>goPage('my-reports')}><I.chart width={14} height={14}/>{t('דוחות שמורים')}</button><button className="ep-btn ep-btn-ghost" onClick={()=>window.eprExportCSV && window.eprExportCSV('requests', filtered, [{k:'id',label:'מזהה'},{k:'title',label:'פנייה'},{k:'dept',label:'מחלקה'},{k:'priority',label:'עדיפות'},{k:'clerk',label:'אחראי'},{k:'channel',label:'ערוץ'},{k:'created',label:'נוצר'},{k:'status',label:'סטטוס'}])} data-toast="off"><I.download width={14} height={14}/>{t('ייצוא Excel')}</button><button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new Event('open-new-request'))}><I.plus width={14} height={14}/>{t('פנייה חדשה')}</button></>}/>
     <div className="row">
       <div className="ep-tabs">
         {[['all','כל הפניות'],['open','פתוחות'],['urgent','דחופות'],['overdue','חורגות SLA']].map(([v,lbl])=>(<button key={v} className={tab===v?'active':''} onClick={()=>setTab(v)}>{t(lbl)}</button>))}
@@ -164,12 +164,22 @@ function ResidentsPage() {
   const d = window.eprData; const I=window.EprIcon; const [q,setQ]=pgS('');
   if (window.useEprLang) window.useEprLang();
   const t = window.eprT || ((s)=>s);
-  const filtered=pgM(()=>q?d.residents.filter(r=>r.name.includes(q)||r.id.includes(q)||r.phone.includes(q)):d.residents,[q]);
+  // Re-render when a resident is added via the EntityCreate modal.
+  const [, bump] = pgS(0);
+  React.useEffect(()=>{
+    const onUpdate = ()=> bump(n=>n+1);
+    window.addEventListener('epr-residents-updated', onUpdate);
+    return ()=> window.removeEventListener('epr-residents-updated', onUpdate);
+  }, []);
+  const filtered=pgM(()=>q?d.residents.filter(r=>r.name.includes(q)||r.id.includes(q)||(r.phone||'').includes(q)):d.residents,[q,d.residents.length]);
   return (<>
-    <PageHeader title={t('תושבים')} icon="users" subtitle={`${d.residents.length.toLocaleString('he-IL')} ${t('תושבים')} · ${d.residents.filter(r=>r.open>0).length} ${t('פניות פתוחות')}`} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('ייצוא')}</button><button className="ep-btn ep-btn-primary"><I.plus width={14} height={14}/>{t('תושב חדש')}</button></>}/>
+    <PageHeader title={t('תושבים')} icon="users" subtitle={`${d.residents.length.toLocaleString('he-IL')} ${t('תושבים')} · ${d.residents.filter(r=>r.open>0).length} ${t('פניות פתוחות')}`} actions={<>
+      <button className="ep-btn ep-btn-ghost" onClick={()=>window.eprExportCSV && window.eprExportCSV('residents', filtered, [{k:'id',label:'ת״ז'},{k:'name',label:'שם'},{k:'email',label:'אימייל'},{k:'phone',label:'טלפון'},{k:'addr',label:'כתובת'},{k:'open',label:'פניות פתוחות'},{k:'total',label:'סה״כ'},{k:'verified',label:'מאומת'}])} data-toast="off"><I.download width={14} height={14}/>{t('ייצוא')}</button>
+      <button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'resident'}}))} data-toast="off"><I.plus width={14} height={14}/>{t('תושב חדש')}</button>
+    </>}/>
     <div className="row">
       <div className="ep-input-wrap" style={{flex:1,maxWidth:400}}><I.search width={14} height={14}/><input placeholder={t('חיפוש לפי שם / ת״ז / טלפון…')} value={q} onChange={e=>setQ(e.target.value)}/></div>
-      <button className="ep-btn ep-btn-ghost"><I.filter width={14} height={14}/>{t('מסננים מתקדמים')}</button>
+      <button className="ep-btn ep-btn-ghost" onClick={()=>window.eprToast && window.eprToast(t('מסננים מתקדמים') + ' — בקרוב', 'info')} data-toast="off"><I.filter width={14} height={14}/>{t('מסננים מתקדמים')}</button>
     </div>
     <section className="ep-card">
       {filtered.length===0 ? (
@@ -200,7 +210,10 @@ function TeamPage() {
   if (window.useEprLang) window.useEprLang();
   const t = window.eprT || ((s)=>s);
   return (<>
-    <PageHeader title={t('ביצועי צוות')} icon="chart" subtitle={t('מעקב עומסים, SLA ותפוקה לפי צוות ולפי עובד')} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('דוח מלא')}</button><button className="ep-btn ep-btn-primary"><I.plus width={14} height={14}/>{t('הוספת צוות')}</button></>}/>
+    <PageHeader title={t('ביצועי צוות')} icon="chart" subtitle={t('מעקב עומסים, SLA ותפוקה לפי צוות ולפי עובד')} actions={<>
+      <button className="ep-btn ep-btn-ghost" onClick={()=>window.eprExportCSV && window.eprExportCSV('teams', d.teams, [{k:'name',label:'שם הצוות'},{k:'lead',label:'ראש צוות'},{k:'size',label:'חברים'},{k:'load',label:'עומס'},{k:'sla',label:'SLA'}])} data-toast="off"><I.download width={14} height={14}/>{t('דוח מלא')}</button>
+      <button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'team'}}))} data-toast="off"><I.plus width={14} height={14}/>{t('הוספת צוות')}</button>
+    </>}/>
     <div className="ep-kpis">
       {[['סה״כ צוותים','5','+1','teal'],['סה״כ עובדים','63','+2','teal'],['עומס ממוצע','78%','-4','green'],['SLA ממוצע','89%','+2','green']].map(([k,v,dlt,tone],i)=>(
         <div key={i} className="ep-kpi"><div className="ep-kpi-head"><span className="ep-kpi-lbl">{t(k)}</span><span className={`ep-delta ${dlt.startsWith('-')?'dn':'up'}`}>{dlt}%</span></div><div className="ep-kpi-val">{v}</div><div className="ep-kpi-foot"><Sparkline data={[60,62,65,68,70,72,74,75,77,78,78,78]} tone={tone} w={132} h={32}/><span className="ep-kpi-sub">{t('חודש')}</span></div></div>
@@ -243,14 +256,17 @@ function BulkPage() {
   if (window.useEprLang) window.useEprLang();
   const t = window.eprT || ((s)=>s);
   return (<>
-    <PageHeader title={t('הודעות מרוכזות')} icon="msg" subtitle={t('ניהול קמפיינים, דיוורים והודעות SMS לתושבים')} actions={<><button className="ep-btn ep-btn-ghost"><I.download width={14} height={14}/>{t('דוח')}</button><button className="ep-btn ep-btn-primary"><I.send width={14} height={14}/>{t('קמפיין חדש')}</button></>}/>
+    <PageHeader title={t('הודעות מרוכזות')} icon="msg" subtitle={t('ניהול קמפיינים, דיוורים והודעות SMS לתושבים')} actions={<>
+      <button className="ep-btn ep-btn-ghost" onClick={()=>window.eprExportCSV && window.eprExportCSV('campaigns', d.campaigns, [{k:'name',label:'שם הקמפיין'},{k:'audience',label:'קהל יעד'},{k:'sent',label:'נשלחו'},{k:'opened',label:'פתיחה'},{k:'ctr',label:'הקלקה'},{k:'status',label:'סטטוס'},{k:'date',label:'תאריך'}])} data-toast="off"><I.download width={14} height={14}/>{t('דוח')}</button>
+      <button className="ep-btn ep-btn-primary" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'campaign'}}))} data-toast="off"><I.send width={14} height={14}/>{t('קמפיין חדש')}</button>
+    </>}/>
     <div className="ep-kpis">
       {[['נשלחו החודש','42.2K','+18','teal'],['אחוז פתיחה','64%','+3','green'],['הקלקות','28%','-2','amber'],['קמפיינים פעילים','3','+1','teal']].map(([k,v,dlt,tone],i)=>(
         <div key={i} className="ep-kpi"><div className="ep-kpi-head"><span className="ep-kpi-lbl">{t(k)}</span><span className={`ep-delta ${dlt.startsWith('-')?'dn':'up'}`}>{dlt}%</span></div><div className="ep-kpi-val">{v}</div><div className="ep-kpi-foot"><Sparkline data={[20,25,28,32,35,38,40,41,42,42,42,42]} tone={tone} w={132} h={32}/><span className="ep-kpi-sub">{t('חודש')}</span></div></div>
       ))}
     </div>
     <section className="ep-card">
-      <div className="ep-card-head"><div><div className="ep-card-eb">{t('יצירת קמפיין')}</div><h3 className="ep-card-title">{t('ארבעה שלבים מהטיוטה לשליחה')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm">{t('המשך →')}</button></div>
+      <div className="ep-card-head"><div><div className="ep-card-eb">{t('יצירת קמפיין')}</div><h3 className="ep-card-title">{t('ארבעה שלבים מהטיוטה לשליחה')}</h3></div><button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.dispatchEvent(new CustomEvent('open-create-entity',{detail:{kind:'campaign'}}))} data-toast="off">{t('המשך →')}</button></div>
       <div className="row" style={{gap:0,marginBottom:8}}>
         {[['1','קהל יעד'],['2','תוכן ההודעה'],['3','תזמון'],['4','שליחה']].map(([n,lbl],i)=>(
           <React.Fragment key={n}>
@@ -290,7 +306,7 @@ function PendingPage({ goPage }) {
         <div className="ep-blank-ic" style={{background:'rgba(242,177,52,.18)',color:'#8A5F17'}}><I.clock width={32} height={32}/></div>
         <h2>{t('החשבון שלך ממתין לאישור')}</h2>
         <p>{t('בקשת ההצטרפות התקבלה ונשלחה למנהל המערכת. תקבל התראה במייל ברגע שהחשבון יאושר. בדרך כלל תוך 24 שעות.')}</p>
-        <div className="row" style={{justifyContent:'center'}}><button className="ep-btn ep-btn-ghost"><I.mail width={14} height={14}/>{t('שלח תזכורת למנהל')}</button><button className="ep-btn ep-btn-primary" onClick={()=>goPage('login')}>{t('חזור להתחברות')}</button></div>
+        <div className="row" style={{justifyContent:'center'}}><button className="ep-btn ep-btn-ghost" onClick={()=>window.eprToast && window.eprToast(t('שלח תזכורת למנהל') + ' ✓', 'success')} data-toast="off"><I.mail width={14} height={14}/>{t('שלח תזכורת למנהל')}</button><button className="ep-btn ep-btn-primary" onClick={()=>goPage('login')}>{t('חזור להתחברות')}</button></div>
       </div>
     </div>
   );
@@ -313,7 +329,7 @@ function InstallPage() {
           <ol style={{margin:0,padding:'0 18px',display:'flex',flexDirection:'column',gap:10,fontSize:13.5,color:'var(--text)'}}>
             {p.steps.map((s,i)=>(<li key={i}>{t(s)}</li>))}
           </ol>
-          <button className="ep-btn ep-btn-primary ep-btn-sm">{t('‹ הוראות מפורטות')}</button>
+          <button className="ep-btn ep-btn-primary ep-btn-sm" onClick={()=>window.eprToast && window.eprToast(t('‹ הוראות מפורטות') + ' · ' + p.os, 'info')} data-toast="off">{t('‹ הוראות מפורטות')}</button>
         </section>
       ))}
     </div>
@@ -411,7 +427,19 @@ function RequestDrawer({ row, onClose, onOpenFull }) {
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:12,color:'var(--muted)',fontWeight:500}}>{t('עמידה ב-SLA')}</span><span style={{fontSize:11,color:'var(--muted)'}}>{row.slaText}</span></div>
           <div className="ep-sla-bar" style={{height:10}}><div className={`ep-sla-fill ${row.sla<30?'low':row.sla<60?'mid':''}`} style={{width:`${row.sla}%`}}/></div>
         </div>
-        <div className="row"><button className="ep-btn ep-btn-primary" onClick={onOpenFull}>{t('פתח תצוגה מלאה ←')}</button><button className="ep-btn ep-btn-ghost">{t('הוספת הערה')}</button><button className="ep-btn ep-btn-ghost"><I.phone width={12} height={12}/>{t('שיחה')}</button><button className="ep-btn ep-btn-danger">{t('סגירה')}</button></div>
+        <div className="row">
+          <button className="ep-btn ep-btn-primary" onClick={onOpenFull}>{t('פתח תצוגה מלאה ←')}</button>
+          <button className="ep-btn ep-btn-ghost" onClick={onOpenFull} data-toast="off">{t('הוספת הערה')}</button>
+          <button className="ep-btn ep-btn-ghost" onClick={()=>{ const ph=row.phone||'052-698-1025'; window.location.href = `tel:${ph.replace(/\s/g,'')}`; }} data-toast="off"><I.phone width={12} height={12}/>{t('שיחה')}</button>
+          <button className="ep-btn ep-btn-danger" onClick={async()=>{
+            const ok = window.eprConfirm
+              ? await window.eprConfirm({ title:t('סגירת פנייה'), message:`${row.id} — ${row.title}`, danger:true, confirmText:t('סגור פנייה') })
+              : window.confirm(`${t('סגירה')}: ${row.id}?`);
+            if (!ok) return;
+            window.eprToast && window.eprToast(`${row.id} ${t('נסגרה')}`, 'success');
+            onClose && onClose();
+          }} data-toast="off">{t('סגירה')}</button>
+        </div>
       </div>
     </aside>
   </>);

@@ -725,6 +725,27 @@ const ENTITY_SCHEMAS = {
       { k:'sla_pause', label:'השהה SLA בתקופה זו', type:'checkbox', defaultValue:true },
     ],
   },
+  resident: {
+    title:'תושב חדש', toast:'התושב נוסף למאגר',
+    fields:[
+      { k:'name', label:'שם מלא', type:'text', required:true, placeholder:'שם פרטי + שם משפחה' },
+      { k:'id', label:'ת״ז', type:'text', dir:'ltr', placeholder:'9 ספרות' },
+      { k:'phone', label:'טלפון', type:'text', dir:'ltr', placeholder:'050-1234567' },
+      { k:'email', label:'אימייל', type:'text', dir:'ltr', placeholder:'name@example.com' },
+      { k:'addr', label:'כתובת', type:'text', placeholder:'רחוב, מספר, שכונה' },
+      { k:'verified', label:'מאומת', type:'checkbox', defaultValue:false },
+    ],
+  },
+  campaign: {
+    title:'קמפיין חדש', toast:'הקמפיין נוצר כטיוטה',
+    fields:[
+      { k:'name', label:'שם הקמפיין', type:'text', required:true, placeholder:'לדוגמה: דיווח על תקלת תאורה' },
+      { k:'channel', label:'ערוץ', type:'select', options:['SMS','Email','Push','WhatsApp'] },
+      { k:'audience', label:'קהל יעד', type:'select', options:['כל התושבים','שכונה מסוימת','רשימת תפוצה','VIP','מנויי 106'] },
+      { k:'schedule', label:'תזמון', type:'select', options:['מיידי','מתוזמן','בהזדמנות הקרובה'] },
+      { k:'message', label:'תוכן ההודעה', type:'textarea', placeholder:'כתוב את ההודעה לתושבים…' },
+    ],
+  },
 };
 
 function EntityCreateModal() {
@@ -764,6 +785,13 @@ function EntityCreateModal() {
         name, manager: data.manager, phone: data.phone,
         email: data.email, color: data.color,
         sla: data.sla ? Number(data.sla) : undefined,
+      });
+    }
+    if (config.kind === 'resident' && window.eprAddResident) {
+      window.eprAddResident({
+        name, id: data.id, phone: data.phone,
+        email: data.email, addr: data.addr,
+        verified: !!data.verified,
       });
     }
     close();

@@ -782,6 +782,11 @@ const EPR_I18N = {
   // ── Quick toasts / labels used in actions ──────────────────
   'נשלחה הודעה':            { en:'Message sent',         ar:'تم إرسال الرسالة',   ru:'Сообщение отправлено' },
   'החיוג בוצע':              { en:'Call placed',          ar:'تم الاتصال',         ru:'Звонок выполнен' },
+  'סגירת פנייה':            { en:'Close request',        ar:'إغلاق الطلب',        ru:'Закрыть заявку' },
+  'סגור פנייה':             { en:'Close',                ar:'إغلاق',              ru:'Закрыть' },
+  'נסגרה':                { en:'closed',               ar:'تم إغلاقها',         ru:'закрыта' },
+  'פתח מחדש':              { en:'Reopen',               ar:'إعادة الفتح',        ru:'Открыть заново' },
+  'סינון לפי קטגוריה':     { en:'Filter by category',   ar:'تصفية حسب الفئة',    ru:'Фильтр по категории' },
 };
 
 const EPR_LANG_DIRS   = { he:'rtl', ar:'rtl', en:'ltr', ru:'ltr' };
