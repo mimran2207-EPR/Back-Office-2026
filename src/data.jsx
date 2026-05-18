@@ -211,6 +211,91 @@ function eprRemoveDepartment(name) {
 
 Object.assign(window, { eprAddDepartment, eprRemoveDepartment, eprLoadCustomDepartments });
 
+/* ─────────────────────────── Custom residents ─────────────────────────── */
+const EPR_CUSTOM_RESIDENTS_KEY = 'epr-custom-residents-v1';
+function eprLoadCustomResidents() {
+  try {
+    const raw = localStorage.getItem(EPR_CUSTOM_RESIDENTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(_) { return []; }
+}
+function eprSaveCustomResidents(list) {
+  try { localStorage.setItem(EPR_CUSTOM_RESIDENTS_KEY, JSON.stringify(list)); }
+  catch(_) {}
+}
+function eprAddResident(res) {
+  if (!res || !res.name) return null;
+  const name = String(res.name).trim();
+  if (!name) return null;
+  const id = res.id || String(100000000 + Math.floor(Math.random() * 900000000));
+  if (window.eprData.residents.some(r => r.id === id || r.name === name)) return null;
+  const row = {
+    id, name,
+    email: res.email || '',
+    phone: res.phone || '',
+    addr:  res.addr  || '',
+    open: 0,
+    total: 0,
+    verified: !!res.verified,
+    custom: true,
+  };
+  const list = eprLoadCustomResidents();
+  list.push(row);
+  eprSaveCustomResidents(list);
+  window.eprData.residents.unshift(row); // newest first
+  window.dispatchEvent(new CustomEvent('epr-residents-updated', { detail: window.eprData.residents }));
+  return row;
+}
+(function hydrateCustomResidents() {
+  const stored = eprLoadCustomResidents();
+  const existing = new Set(window.eprData.residents.map(r => r.id));
+  for (const r of stored) {
+    if (!existing.has(r.id)) window.eprData.residents.unshift(r);
+  }
+})();
+Object.assign(window, { eprAddResident, eprLoadCustomResidents });
+
+/* ─────────────────────────── CSV export helper ─────────────────────────── *
+ * Used by every "ייצוא" / "Export" button across the app. Builds a UTF-8 CSV
+ * (with BOM so Excel reads Hebrew correctly), triggers a download, and toasts.
+ * Usage: window.eprExportCSV('residents', rows, ['id','name','phone'])
+ * `rows` is an array of objects, `cols` an array of keys (or [{k:'name',label:'Name'}]).
+ * ──────────────────────────────────────────────────────────────────────────── */
+function eprExportCSV(filename, rows, cols) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    window.eprToast && window.eprToast('אין נתונים לייצוא', 'info');
+    return;
+  }
+  const fields = (cols && cols.length)
+    ? cols.map(c => typeof c === 'string' ? { k:c, label:c } : c)
+    : Object.keys(rows[0]).map(k => ({ k, label:k }));
+  const escape = (v) => {
+    if (v == null) return '';
+    const s = String(v);
+    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  };
+  const header = fields.map(f => escape(f.label)).join(',');
+  const body = rows.map(r => fields.map(f => escape(r[f.k])).join(',')).join('\r\n');
+  const csv = '﻿' + header + '\r\n' + body;
+  const stamp = new Date().toISOString().slice(0,10);
+  try {
+    const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${filename}-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+    window.eprToast && window.eprToast(`הורד ${a.download} · ${rows.length} שורות`, 'success');
+  } catch(_) {
+    window.eprToast && window.eprToast('שגיאה בייצוא הקובץ', 'danger');
+  }
+}
+
+window.eprExportCSV = eprExportCSV;
+
 /* ─────────────────────────── eprApi ─────────────────────────── *
  * Async facade over the mock data — mirrors the shape we'd want
  * when swapping in a real backend (Supabase, REST, GraphQL…).
