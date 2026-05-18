@@ -1,0 +1,32 @@
+{
+  "name": "EPR Back-Office",
+  "short_name": "EPR",
+  "description": "ניהול בק-אופיס עירוני — פניות, תושבים, צוותים והודעות",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0F968C",
+  "background_color": "#F7F9FB",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230F968C'/><text x='96' y='128' font-family='Heebo,Arial,sans-serif' font-size='100' font-weight='800' fill='%23fff' text-anchor='middle'>E</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%230F968C'/><text x='256' y='340' font-family='Heebo,Arial,sans-serif' font-size='280' font-weight='800' fill='%23fff' text-anchor='middle'>E</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "פנייה חדשה",  "url": "./index.html#dashboard?action=new-request",  "short_name": "פנייה" },
+    { "name": "ניהול פניות", "url": "./index.html#requests",                       "short_name": "פניות" },
+    { "name": "תושבים",       "url": "./index.html#residents" }
+  ]
+}

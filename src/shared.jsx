@@ -362,4 +362,40 @@ function EmptyState({ icon='search', title, hint, action }) {
   );
 }
 
-Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader, useEprBranding, useEprTheme, useEprLang, EmptyState });
+// ── BottomNav — native-app-style tab bar (mobile only via CSS) ───────────
+function BottomNav({ page, setPage }) {
+  const I = window.EprIcon;
+  useEprLang();
+  const t = window.eprT || ((s)=>s);
+  const isActive = (id) => page===id || (id==='requests' && page==='request-detail');
+  const items = [
+    { id:'dashboard', label:t('תמונת מצב'), icon:'home' },
+    { id:'requests',  label:t('פניות'),     icon:'inbox', badge:284 },
+    { id:'residents', label:t('תושבים'),    icon:'users' },
+    { id:'bulk',      label:t('הודעות מרוכזות').split(' ')[0], icon:'msg' },
+    { id:'settings',  label:t('הגדרות'),    icon:'gear' },
+  ];
+  return (
+    <nav className="ep-bottom-nav" role="navigation" aria-label={t('ניווט')}>
+      {items.map(it => {
+        const active = isActive(it.id) || (it.id==='settings' && page.startsWith('settings'));
+        const Icon = I[it.icon];
+        const target = it.id==='settings' ? 'settings/general' : it.id;
+        return (
+          <button key={it.id}
+            className={`ep-bottom-nav-item ${active?'active':''}`}
+            onClick={()=>setPage(target)}
+            aria-current={active ? 'page' : undefined}
+            aria-label={it.label}
+            data-toast="off">
+            {Icon ? <Icon aria-hidden="true"/> : null}
+            <span>{it.label}</span>
+            {it.badge && it.badge > 0 && <span className="ep-bottom-nav-item-badge">{it.badge>99?'99+':it.badge}</span>}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+Object.assign(window, { Sparkline, Sidebar, TopBar, PageHeader, BottomNav, useEprBranding, useEprTheme, useEprLang, EmptyState });
