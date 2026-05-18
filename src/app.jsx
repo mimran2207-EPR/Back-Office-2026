@@ -71,6 +71,7 @@ function EprApp() {
       </main>
       <RequestDrawer row={drawer} onClose={()=>setDrawer(null)} onOpenFull={()=>{ openRequestFull(drawer); setDrawer(null); }}/>
       <EprInteractions/>
+      <BottomNav page={page} setPage={goPage}/>
       <AccessibilityMenu/>
     </div>
   );

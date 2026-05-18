@@ -1,0 +1,317 @@
+/* ════════════════════════════════════════════════════════════════════════
+ * MOBILE APP MODE — full responsive overhaul (<= 720px / <= 480px)
+ * Treats narrow viewports like a native app, not a shrunken desktop.
+ * Loaded AFTER polish.css so it overrides freely.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* iOS safe-area insets (notch, home-indicator) */
+:root {
+  --safe-top:    env(safe-area-inset-top,    0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-start:  env(safe-area-inset-left,   0px);
+  --safe-end:    env(safe-area-inset-right,  0px);
+}
+
+@media (max-width: 720px) {
+
+  /* ── Layout / chrome ─────────────────────────────────────── */
+  body { font-size: 15px; }
+  .ep-main {
+    padding-block-start: var(--safe-top);
+    padding-block-end: calc(72px + var(--safe-bottom));
+  }
+  .ep-content {
+    padding: 16px 14px !important;
+    padding-bottom: calc(120px + var(--safe-bottom)) !important;
+    gap: 14px;
+  }
+  .ep-top {
+    padding: 10px 14px;
+    gap: 10px;
+    position: sticky;
+    top: var(--safe-top);
+  }
+  .ep-top-right { gap: 4px; }
+  .ep-search {
+    padding: 8px 10px;
+    font-size: 12.5px;
+    min-width: 0;
+  }
+  .ep-search .ep-ai-pill, .ep-search .ep-kbd { display: none; }
+  .ep-search span:not(.ep-ai-pill) {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ── Hero ─────────────────────────────────────────────────── */
+  .ep-hero {
+    padding: 20px 18px;
+    border-radius: 16px;
+    gap: 12px;
+  }
+  .ep-hero-brand { display: none; }
+  .ep-hero-title h1 { font-size: 22px; line-height: 1.25; }
+  .ep-hero-title p { font-size: 13px; line-height: 1.4; }
+  .ep-hero-cta { flex-wrap: wrap; gap: 8px; }
+  .ep-hero-cta .ep-btn { flex: 1; min-width: 140px; justify-content: center; }
+
+  /* ── KPI cards: 2-up grid ─────────────────────────────────── */
+  .ep-kpis {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px;
+  }
+  .ep-kpi { padding: 12px 14px; }
+  .ep-kpi-val { font-size: 22px; }
+  .ep-kpi-foot .ep-spark { width: 80px !important; height: 24px !important; }
+
+  /* ── Widgets grid: stack ──────────────────────────────────── */
+  .wg-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  .wg { padding: 14px; border-radius: 14px; }
+  .wg-title { font-size: 14px; }
+
+  /* ── Cards / rows ─────────────────────────────────────────── */
+  .ep-card { padding: 14px; border-radius: 14px; }
+  .ep-card-head { flex-wrap: wrap; gap: 8px; }
+  .ep-card-title { font-size: 15px; }
+
+  .ep-row2, .ep-row3, .ep-row-ll {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  .ep-detail-grid { grid-template-columns: 1fr !important; gap: 10px; }
+
+  /* ── PageHeader stacks ────────────────────────────────────── */
+  .ep-ph {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 0 4px;
+  }
+  .ep-ph > div:first-child { flex: 1 1 100%; }
+  .ep-ph h1 { font-size: 19px; }
+  .ep-ph p { font-size: 12.5px; }
+  .ep-ph-actions {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ep-ph-actions .ep-btn { flex: 1; justify-content: center; min-width: 130px; }
+
+  /* ── Touch targets (WCAG 2.5.5: 44×44) ────────────────────── */
+  .ep-btn { min-height: 44px; padding-inline: 16px; font-size: 13.5px; }
+  .ep-btn-sm { min-height: 38px; padding-inline: 12px; }
+  .ep-icon-btn { min-width: 40px; min-height: 40px; }
+  .ep-toggle { width: 44px; height: 24px; }
+  .ep-toggle-knob { width: 20px; height: 20px; }
+  .ep-toggle.on .ep-toggle-knob { inset-inline-start: 21px; }
+  input, select, textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+  textarea { min-height: 88px; }
+
+  /* ── Tables → card view ───────────────────────────────────── */
+  .ep-table-wrap { overflow: visible; }
+  .ep-table { border-collapse: separate; border-spacing: 0; }
+  .ep-table thead { display: none; }
+  .ep-table tbody, .ep-table tr, .ep-table td { display: block; width: 100%; }
+  .ep-table tr {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow-xs);
+  }
+  .ep-table tr:hover { background: var(--surface); }
+  .ep-table td {
+    padding: 6px 0;
+    border: none;
+    text-align: start;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .ep-table td:first-child {
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+    padding-bottom: 8px;
+    font-weight: 600;
+  }
+  .ep-table td.end { justify-content: flex-end; }
+  .ep-table .ep-cell-title, .ep-table .ep-cell-sub { text-align: start; }
+  .ep-table .ep-sla-bar { max-width: 120px; }
+
+  /* ── Modals → bottom sheet ────────────────────────────────── */
+  .ep-modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+    background: rgba(8,16,24,.45);
+  }
+  .ep-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: calc(16px + var(--safe-bottom));
+    animation: epSheetUp .26s cubic-bezier(.22,1,.36,1);
+  }
+  .ep-modal::before {
+    content: "";
+    display: block;
+    width: 38px;
+    height: 4px;
+    background: var(--border-strong);
+    border-radius: 99px;
+    margin: 8px auto 6px;
+    opacity: .8;
+  }
+  .ep-modal-head { padding-block: 8px 4px; }
+  .ep-modal-body { padding: 12px 16px; }
+  .ep-modal-foot {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    padding-block: 10px;
+    border-top: 1px solid var(--border);
+  }
+  @keyframes epSheetUp {
+    from { transform: translateY(100%); opacity: .6; }
+    to   { transform: translateY(0);    opacity: 1;  }
+  }
+
+  /* ── Settings nav → horizontal scroll pills ──────────────── */
+  .ep-content > div[style*="grid-template-columns: 240px"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .ep-content aside.ep-card[style*="sticky"] {
+    position: static !important;
+    max-height: none !important;
+    overflow-x: auto;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px !important;
+  }
+  .ep-content aside.ep-card ul {
+    display: flex !important;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+  .ep-content aside.ep-card li { flex: 0 0 auto; }
+  .ep-content aside.ep-card .ep-nav-link {
+    white-space: nowrap;
+    padding: 9px 14px !important;
+    border-radius: 999px !important;
+    font-size: 13px !important;
+  }
+  .ep-content aside.ep-card > div:first-child { display: none; }
+
+  /* ── Drawer full-screen on mobile ─────────────────────────── */
+  .ep-drawer {
+    inset-inline-start: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0;
+  }
+
+  /* ── Tags / chips smaller ─────────────────────────────────── */
+  .ep-tag { padding: 4px 10px; font-size: 11.5px; }
+
+  /* ── Sidebar drawer slightly narrower ─────────────────────── */
+  .ep-sb { width: 240px !important; }
+  .ep-sb-bot { padding-bottom: var(--safe-bottom); }
+}
+
+/* ── Smaller phones <= 480px ───────────────────────────────── */
+@media (max-width: 480px) {
+  .ep-kpis { grid-template-columns: 1fr !important; }
+  .ep-kpi { padding: 12px 14px; }
+  .ep-crumbs { display: none; }
+  .ep-hero-title h1 { font-size: 20px; }
+  .ep-hero-title p { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+ * Bottom navigation (mobile-only, native-app-style tab bar)
+ * ══════════════════════════════════════════════════════════════ */
+.ep-bottom-nav { display: none; }
+
+@media (max-width: 720px) {
+  .ep-bottom-nav {
+    display: grid;
+    position: fixed;
+    bottom: 0;
+    inset-inline: 0;
+    z-index: 50;
+    grid-template-columns: repeat(5, 1fr);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding-bottom: var(--safe-bottom);
+    box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+  }
+  .ep-bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 4px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    min-height: 56px;
+  }
+  .ep-bottom-nav-item svg { width: 22px; height: 22px; }
+  .ep-bottom-nav-item.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .ep-bottom-nav-item.active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    inset-inline: 16%;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 0 0 4px 4px;
+  }
+  .ep-bottom-nav-item-badge {
+    position: absolute;
+    top: 6px;
+    inset-inline-end: 22%;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 99px;
+    background: var(--red);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    padding: 0 4px;
+  }
+  .ep-a11y-fab { bottom: calc(78px + var(--safe-bottom)) !important; }
+}
+html[data-theme="dark"] .ep-bottom-nav {
+  background: var(--surface);
+  border-top-color: var(--border);
+}
+
+/* ── PWA standalone tweaks ─────────────────────────────────── */
+@media (display-mode: standalone) {
+  .ep-top { box-shadow: 0 1px 0 var(--border); }
+}
+
+/* ── Block iOS rubber-band scroll on body when overlays open ── */
+html.ep-mobile-nav-open,
+html:has(.ep-modal-overlay) {
+  overscroll-behavior: contain;
+}

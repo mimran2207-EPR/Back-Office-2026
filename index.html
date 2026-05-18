@@ -1,10 +1,28 @@
 <!doctype html>
 <html lang="he" dir="rtl"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Back-Office 2026 · EPR Digital</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+<title>EPR Back-Office</title>
+
+<!-- PWA — install to home screen, standalone app shell -->
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0F968C" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1620" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="format-detection" content="telephone=no">
+
+<!-- iOS / iPadOS standalone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="EPR">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='38' fill='%230F968C'/><text x='90' y='120' font-family='Heebo,Arial,sans-serif' font-size='100' font-weight='800' fill='%23fff' text-anchor='middle'>E</text></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230F968C'/><text x='16' y='22' font-family='Heebo,Arial,sans-serif' font-size='18' font-weight='800' fill='%23fff' text-anchor='middle'>E</text></svg>">
+
 <link rel="stylesheet" href="src/css/styles.css">
 <link rel="stylesheet" href="src/css/polish.css">
 <link rel="stylesheet" href="src/css/ai.css">
+<link rel="stylesheet" href="src/css/mobile.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
