@@ -255,6 +255,60 @@ function eprAddResident(res) {
 })();
 Object.assign(window, { eprAddResident, eprLoadCustomResidents });
 
+/* ─────────────────────────── Custom campaigns ─────────────────────────── *
+ * Campaigns created from the UI (Bulk page or Residents bulk-select) are
+ * stored in localStorage and prepended to the campaigns list.  The
+ * audience field accepts either a plain string (legacy) or an object
+ * { label, ids[] } describing a precise resident audience.
+ * ──────────────────────────────────────────────────────────────────────── */
+const EPR_CUSTOM_CAMPAIGNS_KEY = 'epr-custom-campaigns-v1';
+
+function eprLoadCustomCampaigns() {
+  try {
+    const raw = localStorage.getItem(EPR_CUSTOM_CAMPAIGNS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(_) { return []; }
+}
+function eprSaveCustomCampaigns(list) {
+  try { localStorage.setItem(EPR_CUSTOM_CAMPAIGNS_KEY, JSON.stringify(list)); }
+  catch(_) {}
+}
+function eprAddCampaign(c) {
+  if (!c || !c.name) return null;
+  const row = {
+    name: String(c.name).trim(),
+    audience: typeof c.audience === 'object'
+      ? `${c.audience.ids.length} ${c.audience.label || 'תושבים נבחרים'}`
+      : (c.audience || 'כל התושבים'),
+    audienceIds: (c.audience && c.audience.ids) || c.audienceIds || null,
+    channel: c.channel || 'SMS',
+    sent: 0,
+    opened: 0,
+    ctr: 0,
+    status: c.schedule === 'מיידי' ? 'פעיל' : 'טיוטה',
+    date: new Date().toLocaleDateString('he-IL'),
+    schedule: c.schedule || 'מיידי',
+    message: c.message || '',
+    custom: true,
+    createdAt: new Date().toISOString(),
+  };
+  const list = eprLoadCustomCampaigns();
+  list.unshift(row);
+  eprSaveCustomCampaigns(list);
+  window.eprData.campaigns.unshift(row);
+  window.dispatchEvent(new CustomEvent('epr-campaigns-updated', { detail: window.eprData.campaigns }));
+  return row;
+}
+(function hydrateCustomCampaigns() {
+  const stored = eprLoadCustomCampaigns();
+  const existing = new Set(window.eprData.campaigns.map(c => c.name + (c.createdAt||'')));
+  for (const c of stored) {
+    const key = c.name + (c.createdAt||'');
+    if (!existing.has(key)) window.eprData.campaigns.unshift(c);
+  }
+})();
+Object.assign(window, { eprAddCampaign, eprLoadCustomCampaigns });
+
 /* ─────────────────────────── CSV export helper ─────────────────────────── *
  * Used by every "ייצוא" / "Export" button across the app. Builds a UTF-8 CSV
  * (with BOM so Excel reads Hebrew correctly), triggers a download, and toasts.

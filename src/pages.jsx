@@ -171,7 +171,48 @@ function ResidentsPage() {
     window.addEventListener('epr-residents-updated', onUpdate);
     return ()=> window.removeEventListener('epr-residents-updated', onUpdate);
   }, []);
+  // Multi-select state — Set of resident ids
+  const [selected, setSelected] = pgS(()=> new Set());
   const filtered=pgM(()=>q?d.residents.filter(r=>r.name.includes(q)||r.id.includes(q)||(r.phone||'').includes(q)):d.residents,[q,d.residents.length]);
+  const filteredIds = filtered.map(r => r.id);
+  const allFilteredSelected = filtered.length > 0 && filteredIds.every(id => selected.has(id));
+  const someFilteredSelected = filteredIds.some(id => selected.has(id));
+  const toggleOne = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleAll = () => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filteredIds.forEach(id => next.delete(id));
+      else filteredIds.forEach(id => next.add(id));
+      return next;
+    });
+  };
+  const clearSelection = () => setSelected(new Set());
+  const selectedRows = pgM(()=> Array.from(selected).map(id => d.residents.find(r => r.id===id)).filter(Boolean), [selected, d.residents.length]);
+  const createCampaignForSelection = () => {
+    if (selected.size === 0) return;
+    window.dispatchEvent(new CustomEvent('open-create-entity', {
+      detail: {
+        kind: 'campaign',
+        prefill: {
+          name: `קמפיין · ${selected.size} ${t('תושבים נבחרים')}`,
+          audience: `${selected.size} ${t('תושבים נבחרים')}`,
+        },
+        audienceIds: Array.from(selected),
+        audiencePreview: selectedRows.slice(0, 3).map(r => r.name),
+      },
+    }));
+  };
+  const exportSelection = () => {
+    if (selectedRows.length === 0) return;
+    window.eprExportCSV && window.eprExportCSV('residents-selection', selectedRows,
+      [{k:'id',label:'ת״ז'},{k:'name',label:'שם'},{k:'email',label:'אימייל'},{k:'phone',label:'טלפון'},{k:'addr',label:'כתובת'}]);
+  };
   return (<>
     <PageHeader title={t('תושבים')} icon="users" subtitle={`${d.residents.length.toLocaleString('he-IL')} ${t('תושבים')} · ${d.residents.filter(r=>r.open>0).length} ${t('פניות פתוחות')}`} actions={<>
       <button className="ep-btn ep-btn-ghost" onClick={()=>window.eprExportCSV && window.eprExportCSV('residents', filtered, [{k:'id',label:'ת״ז'},{k:'name',label:'שם'},{k:'email',label:'אימייל'},{k:'phone',label:'טלפון'},{k:'addr',label:'כתובת'},{k:'open',label:'פניות פתוחות'},{k:'total',label:'סה״כ'},{k:'verified',label:'מאומת'}])} data-toast="off"><I.download width={14} height={14}/>{t('ייצוא')}</button>
@@ -185,9 +226,18 @@ function ResidentsPage() {
       {filtered.length===0 ? (
         <EmptyState icon="users" title={t('לא נמצאו תושבים')} hint={q?`${t('לא נמצאו תוצאות')} · "${q}"`:t('נסה לשנות את החיפוש')} action={q&&<button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={()=>setQ('')} data-toast="off">{t('נקה חיפוש')}</button>}/>
       ) : (
-      <div className="ep-table-wrap"><table className="ep-table"><thead><tr><th className="ep-th">{t('ת״ז')}</th><th className="ep-th">{t('שם')}</th><th className="ep-th">{t('אימייל')}</th><th className="ep-th">{t('טלפון')}</th><th className="ep-th">{t('כתובת')}</th><th className="ep-th">{t('פניות פתוחות')}</th><th className="ep-th">{t('סה״כ')}</th><th className="ep-th">{t('אימות')}</th></tr></thead><tbody>
-        {filtered.map(r=>(
-          <tr key={r.id} className="ep-row">
+      <div className="ep-table-wrap"><table className="ep-table"><thead><tr>
+        <th className="ep-th" style={{width:36}}>
+          <input type="checkbox" checked={allFilteredSelected} ref={el=>{ if(el) el.indeterminate = !allFilteredSelected && someFilteredSelected; }}
+            onChange={toggleAll} aria-label={t('בחר הכל')}/>
+        </th>
+        <th className="ep-th">{t('ת״ז')}</th><th className="ep-th">{t('שם')}</th><th className="ep-th">{t('אימייל')}</th><th className="ep-th">{t('טלפון')}</th><th className="ep-th">{t('כתובת')}</th><th className="ep-th">{t('פניות פתוחות')}</th><th className="ep-th">{t('סה״כ')}</th><th className="ep-th">{t('אימות')}</th>
+      </tr></thead><tbody>
+        {filtered.map(r=>{
+          const isSel = selected.has(r.id);
+          return (
+          <tr key={r.id} className={`ep-row ${isSel?'ep-row-selected':''}`}>
+            <td><input type="checkbox" checked={isSel} onChange={()=>toggleOne(r.id)} aria-label={`${t('בחר')} ${r.name}`} onClick={e=>e.stopPropagation()}/></td>
             <td className="ep-mono">{r.id}</td>
             <td><div style={{display:'flex',alignItems:'center',gap:10}}><div className="ep-avatar" style={{width:28,height:28,fontSize:11}}>{r.name.split(' ').map(s=>s[0]).slice(0,2).join('')}</div><b>{r.name}</b></div></td>
             <td className="ep-muted">{r.email}</td>
@@ -196,11 +246,32 @@ function ResidentsPage() {
             <td>{r.open>0?<span className="ep-tag amber">{r.open}</span>:<span className="ep-muted">0</span>}</td>
             <td><b>{r.total}</b></td>
             <td>{r.verified?<span className="ep-tag green">{t('✓ מאומת')}</span>:<span className="ep-tag slate">{t('ממתין')}</span>}</td>
-          </tr>
-        ))}
+          </tr>);
+        })}
       </tbody></table></div>
       )}
     </section>
+
+    {/* Floating action bar — visible when at least one resident is ticked */}
+    {selected.size > 0 && (
+      <div className="ep-selection-bar" role="region" aria-label={t('פעולות על בחירה')}>
+        <div className="ep-selection-count">
+          <I.users width={16} height={16} aria-hidden="true"/>
+          <b>{selected.size}</b> {selected.size === 1 ? t('תושב נבחר') : t('תושבים נבחרים')}
+        </div>
+        <div className="ep-selection-actions">
+          <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={exportSelection} data-toast="off">
+            <I.download width={13} height={13}/>{t('ייצוא בחירה')}
+          </button>
+          <button className="ep-btn ep-btn-primary ep-btn-sm" onClick={createCampaignForSelection} data-toast="off">
+            <I.send width={13} height={13}/>{t('צור קמפיין לקהל זה')}
+          </button>
+          <button className="ep-btn ep-btn-ghost ep-btn-sm" onClick={clearSelection} data-toast="off" aria-label={t('נקה בחירה')}>
+            <I.close width={12} height={12}/>{t('נקה')}
+          </button>
+        </div>
+      </div>
+    )}
   </>);
 }
 

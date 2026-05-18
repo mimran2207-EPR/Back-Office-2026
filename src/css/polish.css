@@ -973,3 +973,84 @@ html[data-theme="dark"] .ep-toggle.on .ep-toggle-knob { background: #fff; }
 /* RTL-aware stripe direction for request-detail cards */
 :root { --rd-stripe-dir: left; }
 html[dir="rtl"] { --rd-stripe-dir: right; }
+
+/* ─────────────────────────────────────────────────────────
+ * Selection action bar (Residents bulk-select)
+ * Floats above the bottom-nav / FAB; centered, with a clear count
+ * and primary action to spin selection into a campaign audience.
+ * ───────────────────────────────────────────────────────── */
+.ep-selection-bar {
+  position: fixed;
+  bottom: 24px;
+  inset-inline: 50%;
+  transform: translateX(50%);
+  z-index: 7900;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 38px rgba(15, 31, 47, .18), 0 1px 2px rgba(15, 31, 47, .06);
+  animation: epSelBarIn .22s var(--ease-out);
+  max-width: calc(100vw - 32px);
+}
+html[dir="rtl"] .ep-selection-bar { transform: translateX(-50%); }
+@keyframes epSelBarIn {
+  from { opacity: 0; transform: translate(var(--rtl-tx, 50%), 18px); }
+  to   { opacity: 1; transform: translate(var(--rtl-tx, 50%), 0); }
+}
+html[dir="rtl"] .ep-selection-bar { --rtl-tx: -50%; }
+
+.ep-selection-count {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--text);
+  padding-inline-end: 14px;
+  border-inline-end: 1px solid var(--border);
+}
+.ep-selection-count b { color: var(--accent); font-weight: 800; font-size: 16px; }
+
+.ep-selection-actions {
+  display: flex; align-items: center; gap: 6px;
+}
+
+.ep-row-selected { background: rgba(15, 150, 140, .06) !important; }
+.ep-row-selected td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+html[dir="rtl"] .ep-row-selected td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
+
+/* On mobile, the bar sits above the bottom nav (which is ~70px tall) */
+@media (max-width: 720px) {
+  .ep-selection-bar {
+    bottom: calc(86px + var(--safe-bottom));
+    inset-inline: 12px;
+    transform: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+  }
+  html[dir="rtl"] .ep-selection-bar { transform: none; }
+  .ep-selection-count {
+    border-inline-end: none;
+    border-block-end: 1px solid var(--border);
+    padding-inline-end: 0;
+    padding-block-end: 8px;
+  }
+  .ep-selection-actions { flex-wrap: wrap; }
+  .ep-selection-actions .ep-btn { flex: 1; min-width: 110px; justify-content: center; }
+}
+
+html[data-theme="dark"] .ep-selection-bar { background: var(--surface); }
+html[data-theme="dark"] .ep-row-selected { background: rgba(74, 183, 196, .12) !important; }
+
+/* On mobile when tables become cards, the checkbox cell needs its own row */
+@media (max-width: 720px) {
+  .ep-table td:has(input[type="checkbox"][aria-label*="בחר"]) {
+    border-bottom: none;
+    padding-bottom: 4px;
+    margin-bottom: 0;
+    justify-content: flex-start;
+    font-weight: 500;
+  }
+}
